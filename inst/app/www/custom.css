@@ -1,0 +1,90 @@
+:root{
+  --color-tangerine: #F55B41;
+  --color-green: #43A047;
+  --color-red: #E53935;
+}
+
+
+/*CSS for all texts */
+
+.value-box, .value-box * {
+  color: white !important;
+}
+
+.white-text {
+  color: white;
+}
+
+.white-icon {
+  color: white;
+}
+
+*{font-family:'Poppins', sans-serif;
+  text-align: left;
+}
+
+
+/* CSS for color update for run button */
+
+.buttons-row {
+  display:flex;
+  gap:10px;
+}
+
+.bttn-unite.bttn-warning {
+    border-color: var(--color-tangerine);
+    background-color: white;
+    color: var(--color-tangerine);
+}
+
+.bttn-unite.bttn-warning:before {
+    background: var(--color-tangerine);
+    color: white;
+}
+
+.bttn-unite.bttn-warning:after {
+    background: #F7745E;
+    color: white;
+}
+
+.bttn-unite.bttn-success {
+    border-color: var(--color-green);
+    background-color: white;
+    color: var(--color-green);
+}
+
+.bttn-unite.bttn-danger {
+    border-color: var(--color-red);
+    background-color: white;
+    color: var(--color-red);
+}
+
+
+
+/* CSS for color bslib header*/
+
+.bslib-card .card-header {
+  background: #9ed6e3 ;
+
+}
+
+
+/*CSS for version position*/
+span.versionapp {
+    position: fixed;
+    bottom: 0;
+    right: 0;
+}
+
+
+/* CSS for tabset */
+
+.nav-tabs {
+
+    font-size: 12px;
+}
+
+.nav-tabs>li>a {
+    color:#606060;
+    background-color: #E7F1F9;
+}

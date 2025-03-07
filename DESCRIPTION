@@ -1,0 +1,41 @@
+Package: SBD
+Title: rate my SBD
+Version: 0.0.0.9000
+Authors@R: 
+    person("Jason", "Cosgrove", , "jason.cosgrove47@gmail.com", role = c("aut", "cre"))
+Description: THis package provides a number of analytical tools to assess competitive powerlifting performances
+License: What license is it under?
+Imports: 
+    bbcCorpo,
+    bbcUtils,
+    bslib,
+    circlize,
+    ComplexHeatmap,
+    config,
+    dplyr,
+    DT,
+    forcats,
+    ggiraph,
+    ggplot2,
+    golem,
+    grid,
+    janitor,
+    knitr,
+    lubridate,
+    magrittr,
+    oncopanel.AML (>= 0.2.1),
+    purrr,
+    readr,
+    rlang,
+    shiny,
+    shinycssloaders,
+    shinyWidgets,
+    stats,
+    stringr,
+    tibble,
+    tidyr,
+    tidyverse,
+    tidytext
+Encoding: UTF-8
+LazyData: true
+RoxygenNote: 7.3.2
