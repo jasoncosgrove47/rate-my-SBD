@@ -4,6 +4,19 @@
 
 library(ggplot2)
 
+
+html_bullets <- function(chr, na.rm = TRUE)
+{
+  if (na.rm) {
+    chr <- chr[!is.na(chr)]
+  }
+  else {
+    chr[is.na(chr)] <- ""
+  }
+  paste0("<ul>", paste0(paste0("<li>", chr, "</li>"), collapse = ""),
+         "</ul>")
+}
+
 calculate_dots <- function(body_weight, weight_lifted, is_female) {
   # Define coefficients for male and female
   male_coeff <- c(-307.75076, 24.0900756, -0.1918759221, 0.0007391293, -0.000001093)
@@ -78,7 +91,17 @@ create_lift_plot <- function(data, lift_name) {
     "Best3BenchKg" = "#8DA0CB",
     "Best3DeadliftKg" = "#66C2A5" ,
     "BodyweightKg" = "grey50" ,
-    "Dots" = "purple"
+    "Dots" = "purple",
+    "TotalKg" = "black"
+  )
+
+  annot_map <- c(
+    "Best3SquatKg" = "kg",
+    "Best3BenchKg" = "kg",
+    "Best3DeadliftKg" = "kg",
+    "BodyweightKg" = "kg",
+    "Dots" = "DOTS Score",
+    "TotalKg" = "Kg"
   )
 
   ggplot(df_filtered, aes(x = Comp, y = Weight,group = 1)) +
@@ -106,7 +129,7 @@ create_lift_plot <- function(data, lift_name) {
     ) +
     labs(
       x = "Competition",
-      y = "Weight (kg)"
+      y = annot_map[lift_name]
       #title = paste("Lift Progress"),
       #subtitle = "Track your strength gains over time"
     ) +
@@ -134,7 +157,7 @@ create_lift_plot <- function(data, lift_name) {
         angle = 60,
         hjust = 1,
         vjust = 1,
-        size = 7
+        size = 8
       ),
       panel.grid.major = element_line(
         color = "grey90",
@@ -151,10 +174,12 @@ create_lift_plot <- function(data, lift_name) {
       breaks = unique(df_filtered$Comp)
     ) +
     scale_y_continuous(
-      labels = scales::label_number(suffix = " kg"),
+      #labels = scales::label_number(suffix = annot_map[lift_name]),
       limits = c(min(df_filtered$Weight, na.rm = TRUE) * 0.9, max(df_filtered$Weight, na.rm = TRUE) * 1.1),
       expand = expansion(mult = c(0.1, 0.1))
     )
 }
+
+
 
 

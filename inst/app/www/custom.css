@@ -7,6 +7,11 @@
 
 /*CSS for all texts */
 
+#gauge_chart {
+  height: 600px;  /* Adjust height as needed */
+  margin-top: 20px;  /* Adjust top margin as needed */
+}
+
 .value-box, .value-box * {
   color: white !important;
 }
@@ -62,10 +67,9 @@
 
 
 /* CSS for color bslib header*/
-
 .bslib-card .card-header {
-  background: #9ed6e3 ;
-
+  background: black;
+  color: white;
 }
 
 
@@ -85,6 +89,6 @@ span.versionapp {
 }
 
 .nav-tabs>li>a {
-    color:#606060;
+    color:#D3D3D3;
     background-color: #E7F1F9;
 }

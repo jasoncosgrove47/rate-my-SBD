@@ -28,10 +28,16 @@ mod_data_ui <- function(id) {
     br(),
 
     tags$h3("Option 2: Manually input your details"),
-
+    tags$h5("If using this functionality make sure that option 1 is set to << No Lifter Selected >>"),
+    #"If using this functionality make sure that option 1 is set to No Lifter Selected"
     selectInput(ns("gender"), "Select Gender:", choices = c("Male", "Female")),
     numericInput(ns("age"), "Enter Age:", value = 25, min = 1, max = 100),
     selectInput(ns("tested"), "Compete in a tested federation?:", choices = c("Yes", "No")),
+    selectizeInput(ns("weight_class"), "Select Weight Class:", choices = NULL),
+    selectizeInput(ns("category"), "Select Category:", choices = NULL),
+
+
+
 
     br(),
     br(),
@@ -81,20 +87,29 @@ mod_data_server <- function(id,lifts_data){
   moduleServer(id, function(input, output, session){
     ns <- session$ns
 
-
-
     updateSelectizeInput(session, "selected_item", choices = all_lifter_names, server = TRUE)
 
     output$selected_item_text <- renderText({
       paste("Your selection:", input$selected_item)
     })
 
+    # Display the selected values
+    output$selected_weight_class <- renderText({
+      paste("Selected Weight Class:", input$weight_class)
+    })
+
+    output$selected_category <- renderText({
+      paste("Selected Category:", input$category)
+    })
+
+    updateSelectizeInput(session, "weight_class", choices = unique(minima$WeightClass),server = TRUE)
+    updateSelectizeInput(session, "category", choices = unique(minima$Category),server = TRUE)
 
     observe({
 
       selected_item <- input$selected_item %||% "No Lifter Selected"
 
-      data$df <- if (selected_item == "No Lifter Selected") {
+      df <- if (selected_item == "No Lifter Selected") {
 
         data.frame(
             Comp = 1:5,
@@ -104,6 +119,8 @@ mod_data_server <- function(id,lifts_data){
             Best3BenchKg = sapply(1:5, function(i) input[[paste0("bench", i)]]),
             Best3DeadliftKg = sapply(1:5, function(i) input[[paste0("deadlift", i)]]),
             BodyweightKg = sapply(1:5, function(i) input[[paste0("bodyweight", i)]]),
+            WeightClassKg = rep(input$weight_class, 5),
+            Category = rep(input$category, 5),
             Sex = rep(input$gender, 5),
             Age = rep(input$age, 5),
             Tested = rep(input$tested, 5),
@@ -112,7 +129,14 @@ mod_data_server <- function(id,lifts_data){
               total_lift <- sum(input[[paste0("squat", i)]], input[[paste0("bench", i)]], input[[paste0("deadlift", i)]])
               is_female <- input$gender == "Female"
               calculate_dots(bodyweight, total_lift, is_female)
-            }))
+            }),
+
+            TotalKg = sapply(1:5, function(i) {
+              sum(input[[paste0("squat", i)]], input[[paste0("bench", i)]], input[[paste0("deadlift", i)]])
+            })
+
+
+            )
 
 
       } else {
@@ -121,23 +145,16 @@ mod_data_server <- function(id,lifts_data){
 
       }
 
-      # Add selected_item to the data for completeness
-      data$selected_item <- selected_item
+
 
       # Return the reactive expression so it can be used by other modules
-      lifts_data(data)
+      lifts_data(list(selected_item = selected_item,df = df))
 
     })
-
-
 
   })
 }
 
-## To be copied in the UI
-# mod_metrics_ui("metrics_1")
 
-## To be copied in the server
-# mod_metrics_server("metrics_1")
 
 

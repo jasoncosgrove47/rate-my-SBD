@@ -3,11 +3,9 @@ Title: rate my SBD
 Version: 0.0.0.9000
 Authors@R: 
     person("Jason", "Cosgrove", , "jason.cosgrove47@gmail.com", role = c("aut", "cre"))
-Description: THis package provides a number of analytical tools to assess competitive powerlifting performances
+Description: This package provides a number of analytical tools to assess competitive powerlifting performances
 License: What license is it under?
 Imports: 
-    bbcCorpo,
-    bbcUtils,
     bslib,
     circlize,
     ComplexHeatmap,
@@ -23,8 +21,8 @@ Imports:
     knitr,
     lubridate,
     magrittr,
-    oncopanel.AML (>= 0.2.1),
     purrr,
+    plotly,
     readr,
     rlang,
     shiny,

@@ -6,7 +6,6 @@
 #'
 #' @noRd
 #'
-#' @importFrom bbcUtils html_bullets
 #' @importFrom bslib value_box value_box_theme layout_column_wrap
 #' @importFrom shiny NS tagList
 #' @importFrom stringr str_glue
@@ -27,13 +26,15 @@ mod_home_ui <- function(id) {
                 value = format(nrow(openpl), big.mark = ","),
                 showcase = shiny::icon("medal"),
                 theme = value_box_theme(bg = "#9C7DCC"),
+                #theme = value_box_theme(bg = "#E9B000",fg = "white"),
                 p("competitive performances evaluated", class = "white-text")
                 ), #value_box
 
       value_box(title = NULL,
                 value =  format(length(unique(openpl$Name)), big.mark = ","),
                 showcase = shiny::icon("person", class = "white-icon"),
-                theme = value_box_theme(bg = "#33ABC5",fg = "white"),
+                theme = value_box_theme(bg = "#808080",fg = "white"),
+                #theme = value_box_theme(bg = "#E9B000",fg = "white"),
                 p("lifters evaluated", class = "white-text"),
                 ), #value_box
 
@@ -48,6 +49,7 @@ mod_home_ui <- function(id) {
                 value =  "62",
                 showcase = shiny::icon("clock", class = "white-icon"),
                 theme = value_box_theme(bg = "#91C461",fg = "white"),
+                #theme = value_box_theme(bg = "#E9B000",fg = "white"),
                 p("years of historical records", class = "white-text")
                 ) #value_box
     ), # layout_column_wrap
@@ -64,7 +66,7 @@ mod_home_ui <- function(id) {
       HTML(html_bullets(
         c(
           "Evaluations are based on the most comprehensive database of competitive powerlifting performances",
-          "Evaluations are based on 3.5 million competitive performances evaluated over a 62 year time span",
+          "Evaluations are based on 2.5 million competitive performances evaluated over a 62 year time span",
           "Annotations of age, sex, body weight, experience, tested vs untested, equipped vs raw allow you to make highly detailed comparisons"
           )))
          ), # card

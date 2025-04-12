@@ -10,12 +10,15 @@
 mod_vis_ui <- function(id) {
   ns <- NS(id)
 
-  # fluidPage(
-  #
-  #   textOutput(ns("textOutput"))
-  # )
-
   fluidPage(
+    titlePanel("Summarise your best competitive lifts"),
+
+    # First Row: Text Output
+    fluidRow(
+      column(12, textOutput(ns("textOutput")))
+    ),
+    br(),
+    br(),
     fluidRow(
       layout_columns(
         fill = TRUE,
@@ -39,6 +42,12 @@ mod_vis_ui <- function(id) {
         )
       )
     ),
+    # Second Row: Plot Outputs
+    fluidRow(
+      column(4, plotOutput(ns("squat_hist")), height = "400px"),
+      column(4, plotOutput(ns("bench_hist")), height = "400px"),
+      column(4, plotOutput(ns("deadlift_hist")), height = "400px")
+    ),
     layout_columns(
       col_widths = c(4, 4, 4),
       card(
@@ -60,6 +69,7 @@ mod_vis_ui <- function(id) {
         plotOutput(ns("deadlift_progress"))
       )
     )
+
   )
 
 }
@@ -76,19 +86,7 @@ mod_vis_server <- function(id,lifts_data){
       lifts_data()
     })
 
-    # output$textOutput <- renderText({
-    #
-    #   data_val <- data()
-    #
-    #   if (is.null(data_val)) {
-    #     return("No data available")
-    #   } else if (data_val$selected_item == "No Lifter Selected") {
-    #     return(paste("test manual input:",nrow(data_val$df)))
-    #   } else {
-    #     return(paste("How ya now. Selected item:", nrow(data_val$df)))
-    #   }
-    #
-    # })
+    output$textOutput <- renderText({"The following plots shows where your performance stands compared to lifters of the same sex, weight class, and age range (±5 years). This allows you to see how you compare to others—whether you're above average, near the middle of the pack, or aiming for further improvement."})
 
 
     # Best lift outputs
@@ -115,14 +113,6 @@ mod_vis_server <- function(id,lifts_data){
     })
 
 
-
-    output$DOTS_progress <- renderPlot({
-
-      data_val <- data()
-      create_lift_plot(data_val$df, "Dots")
-    })
-
-
     output$squat_progress <- renderPlot({
 
       data_val <- data()
@@ -141,13 +131,120 @@ mod_vis_server <- function(id,lifts_data){
       create_lift_plot(data_val$df, "Best3DeadliftKg")
     })
 
-    output$bodyweight_progress <- renderPlot({
+    output$squat_hist <- renderPlot({
 
       data_val <- data()
-      create_lift_plot(data_val$df, "BodyweightKg")
+
+      create_progress_bar(data_val$df,'Best3SquatKg')
+
+    })
+
+    output$bench_hist <- renderPlot({
+
+      data_val <- data()
+
+      create_progress_bar(data_val$df,'Best3BenchKg')
+
+    })
+
+    output$deadlift_hist <- renderPlot({
+
+      data_val <- data()
+
+      create_progress_bar(data_val$df,'Best3DeadliftKg')
+
+    })
+
+    output$dots_hist <- renderPlot({
+
+      data_val <- data()
+
+      create_progress_bar(data_val$df,'Dots')
+
     })
 
 
+    create_progress_bar <- function(lifter, column_name) {
+
+      data_val <- data()
+
+
+      # Ensure the column name exists in the data frame
+      if (!column_name %in% colnames(openpl)) {
+        stop("The specified column does not exist in the data frame.")
+      }
+
+      color_map <- c(
+        "Best3SquatKg" = "#FC8D62",
+        "Best3BenchKg" = "#8DA0CB",
+        "Best3DeadliftKg" = "#66C2A5" ,
+        "BodyweightKg" = "grey50" ,
+        "Dots" = "purple",
+        "TotalKg" = "black"
+      )
+
+      annot_map <- c(
+        "Best3SquatKg" = "squat",
+        "Best3BenchKg" = "bench",
+        "Best3DeadliftKg" = "deadlift" ,
+        "BodyweightKg" = "body weight" ,
+        "Dots" = "DOTS score",
+        "TotalKg" = "total"
+      )
+
+
+      age <- max(lifter$Age, na.rm = TRUE)
+      sex <- max(lifter$Sex, na.rm = TRUE)
+      age_range <- 5
+      value <- max(lifter[[column_name]], na.rm = TRUE)
+      weightclass <- names(which.max(table(lifter$WeightClassKg)))
+
+      if(column_name == "Dots" | column_name == "TotalKg" | data_val$selected_item == "No Lifter Selected" ){
+        df <- openpl%>%
+          filter(year > 2010)
+      }else{
+
+        df <- openpl %>%
+          filter(year > 2010) %>%
+          filter(age >= (age - age_range) & age <= (age + age_range)) %>%
+          filter(WeightClassKg == weightclass) %>%
+          filter(Sex == sex)
+
+      }
+
+      # Don't allow negative values
+      df <- df[df[[column_name]] > 0,]
+
+      # Calculate the percentile
+      percentile <- ecdf(df[[column_name]])(value) * 100
+
+      # Ensure percentile is within bounds
+      percentile <- max(0, min(percentile, 100))
+
+      # Create a data frame for plotting
+      data <- data.frame(x = c(0, percentile), y = 1)
+
+      # Plot using ggplot2
+      progress_bar <- ggplot() +
+        # Background bar
+        geom_rect(aes(xmin = 0, xmax = 100, ymin = 0.4, ymax = 1.6),
+                  fill = "lightgray", color = "black", alpha = 0.5, linewidth = 1) +
+        # Filled progress bar
+        geom_rect(data = data, aes(xmin = 0, xmax = percentile, ymin = 0.4, ymax = 1.6),
+                  fill = color_map[column_name], color = "black", alpha = 0.9, linewidth = 1) +
+        # Add percentage text
+        annotate("text", x = 50, y = 1, label = paste0(round(percentile, 2), "%"),
+                 color = "white", size = 10, fontface = "bold") +
+        # Add contextual information
+        annotate("text", x = 50, y = 1.8, label = paste("Your",annot_map[column_name] ,"is better than that of \n", round(percentile, 2), "% of other lifters in your category."),
+                 color = "black", size = 5, fontface = "bold") +
+        # Formatting
+        theme_void() +
+        coord_cartesian(xlim = c(0, 100), ylim = c(0, 2)) +
+        theme(plot.margin = margin(10, 10, 10, 10))
+
+      return(progress_bar)
+    }
 
   })
 }
