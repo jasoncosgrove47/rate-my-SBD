@@ -47,7 +47,7 @@ mod_minima_ui <- function(id) {
 #' minima Server Functions
 #'
 #' @noRd
-mod_minima_server <- function(id,lifts_data){
+mod_minima_server <- function(id,lifts_data,openpl,minima){
   moduleServer(id, function(input, output, session){
     ns <- session$ns
 

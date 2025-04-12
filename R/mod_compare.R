@@ -71,7 +71,7 @@ mod_compare_ui <- function(id) {
 #' metrics Server Functions
 #'
 #' @noRd
-mod_compare_server <- function(id,lifts_data){
+mod_compare_server <- function(id,lifts_data,openpl,minima){
   moduleServer(id, function(input, output, session){
     ns <- session$ns
 

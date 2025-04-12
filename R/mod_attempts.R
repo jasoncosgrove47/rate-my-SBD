@@ -41,7 +41,7 @@ mod_attempts_ui <- function(id) {
 #' metrics Server Functions
 #'
 #' @noRd
-mod_attempts_server <- function(id,lifts_data){
+mod_attempts_server <- function(id,lifts_data,openpl,minima){
   moduleServer(id, function(input, output, session){
     ns <- session$ns
 

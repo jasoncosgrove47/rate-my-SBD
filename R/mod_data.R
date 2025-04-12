@@ -83,7 +83,7 @@ mod_data_ui <- function(id) {
 #' metrics Server Functions
 #'
 #' @noRd
-mod_data_server <- function(id,lifts_data){
+mod_data_server <- function(id,lifts_data,openpl,minima,all_lifter_names){
   moduleServer(id, function(input, output, session){
     ns <- session$ns
 

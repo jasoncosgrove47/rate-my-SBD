@@ -77,7 +77,7 @@ mod_vis_ui <- function(id) {
 #' metrics Server Functions
 #'
 #' @noRd
-mod_vis_server <- function(id,lifts_data){
+mod_vis_server <- function(id,lifts_data,openpl,minima){
   moduleServer(id, function(input, output, session){
     ns <- session$ns
 

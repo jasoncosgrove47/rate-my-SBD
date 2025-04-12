@@ -23,6 +23,7 @@ Imports:
     magrittr,
     purrr,
     plotly,
+    qs,
     readr,
     rlang,
     shiny,
