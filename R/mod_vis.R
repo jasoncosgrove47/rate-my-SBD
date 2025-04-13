@@ -209,14 +209,17 @@ mod_vis_server <- function(id,lifts_data,openpl,minima){
 
 
       age <- max(lifter$Age, na.rm = TRUE)
-      sex <- max(lifter$Sex, na.rm = TRUE)
+      sex <- lifter$Sex[1]
       age_range <- 5
       value <- max(lifter[[column_name]], na.rm = TRUE)
       weightclass <- names(which.max(table(lifter$WeightClassKg)))
 
       if(column_name == "Dots" | column_name == "TotalKg" | data_val$selected_item == "No Lifter Selected" ){
         df <- openpl%>%
-          filter(year > 2010)
+          filter(year > 2010) %>%
+          filter(age >= (age - age_range) & age <= (age + age_range)) %>%
+          filter(WeightClassKg == weightclass) %>%
+          filter(Sex == sex)
       }else{
 
         df <- openpl %>%

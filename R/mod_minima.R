@@ -58,7 +58,17 @@ mod_minima_server <- function(id,lifts_data,openpl,minima){
 
     # Ensure lifts_data is called within a reactive context
     data <- reactive({
-      lifts_data()
+      #lifts_data()
+
+      data <- lifts_data()
+
+      data$df <- data$df %>%
+        filter(
+          Equipment == data$equipped,
+          Tested == data$tested
+        )
+
+      data  # return the full list with filtered df
     })
 
     updateSelectizeInput(session, "weight_class", choices = unique(minima$WeightClass),server = TRUE)
