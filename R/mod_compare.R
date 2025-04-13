@@ -87,6 +87,7 @@ mod_compare_server <- function(id,lifts_data,openpl,minima){
           Tested == data$tested
         )
 
+
       data  # return the full list with filtered df
 
 
@@ -174,16 +175,24 @@ mod_compare_server <- function(id,lifts_data,openpl,minima){
 
       age <- max(lifter$Age, na.rm = TRUE)
       sex <- lifter$Sex[1]
+
+      print("SEX")
+      print(sex)
+
+
       age_range <- 5
       value <- max(lifter[[column_name]], na.rm = TRUE)
+
+
       weightclass <- names(which.max(table(lifter$WeightClassKg)))
+
 
       if(column_name == "Dots" | column_name == "TotalKg"){
         df <- openpl%>%
-          filter(year > 2010) %>%
-          filter(age >= (age - age_range) & age <= (age + age_range)) %>%
-          filter(WeightClassKg == weightclass) %>%
-          filter(Sex == sex)
+           filter(year > 2010) %>%
+           filter(age >= (age - age_range) & age <= (age + age_range)) %>%
+           filter(WeightClassKg == weightclass) %>%
+           filter(Sex == sex)
       }else{
 
         df <- openpl %>%

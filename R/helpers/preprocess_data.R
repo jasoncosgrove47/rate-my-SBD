@@ -15,6 +15,9 @@ openpl <- openpl %>%
                             "Single-ply" = "Equipped",
                             "Straps" = "Equipped",
                             "Unlimited" = "Equipped"),
+         Sex = recode(Sex,
+                      "M" = "Male",
+                      "F" = "Female"),
          year = year(Date),
          Comp = paste(year, MeetName, sep = "_"),
          Tested = case_when(
