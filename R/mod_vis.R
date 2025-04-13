@@ -83,7 +83,19 @@ mod_vis_server <- function(id,lifts_data,openpl,minima){
 
     # Ensure lifts_data is called within a reactive context
     data <- reactive({
-      lifts_data()
+      #lifts_data()
+
+      data <- lifts_data()
+
+      data$df <- data$df %>%
+        filter(
+          Equipment == data$equipped,
+          Tested == data$tested
+        )
+
+      data  # return the full list with filtered df
+
+
     })
 
     output$textOutput <- renderText({"The following plots shows where your performance stands compared to lifters of the same sex, weight class, and age range (±5 years). This allows you to see how you compare to others—whether you're above average, near the middle of the pack, or aiming for further improvement."})
@@ -92,6 +104,9 @@ mod_vis_server <- function(id,lifts_data,openpl,minima){
     # Best lift outputs
     output$best_squat <- renderText({
       data_val <- data()
+
+
+
 
       max_squat <- max(data_val$df$Best3SquatKg, na.rm = TRUE)
       if (is.finite(max_squat)) paste(max_squat, "kg") else "No data"

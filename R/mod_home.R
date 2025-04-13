@@ -50,57 +50,6 @@ mod_home_ui <- function(id) {
   )
 }
 
-# mod_home_server <- function(id, openpl, minima) {
-#   moduleServer(id, function(input, output, session) {
-#     ns <- session$ns
-#
-#     # ✅ Precompute values once
-#     n_entries   <- format(nrow(openpl), big.mark = ",")
-#     n_lifters   <- format(length(unique(openpl$Name)), big.mark = ",")
-#     n_countries <- format(length(unique(openpl$Country)), big.mark = ",")
-#
-#     # ✅ Then render simple UI using precomputed values
-#     output$box_entries <- renderUI({
-#       value_box(
-#         title = NULL,
-#         value = n_entries,
-#         showcase = shiny::icon("medal"),
-#         theme = value_box_theme(bg = "#9C7DCC"),
-#         p("performances evaluated", class = "white-text")
-#       )
-#     })
-#
-#     output$box_lifters <- renderUI({
-#       value_box(
-#         title = NULL,
-#         value = n_lifters,
-#         showcase = shiny::icon("person", class = "white-icon"),
-#         theme = value_box_theme(bg = "#808080", fg = "white"),
-#         p("lifters evaluated", class = "white-text")
-#       )
-#     })
-#
-#     output$box_countries <- renderUI({
-#       value_box(
-#         title = NULL,
-#         value = n_countries,
-#         showcase = shiny::icon("flag", class = "white-icon"),
-#         theme = value_box_theme(bg = "#E9B000", fg = "white"),
-#         p("countries evaluated", class = "white-text")
-#       )
-#     })
-#
-#     output$box_years <- renderUI({
-#       value_box(
-#         title = NULL,
-#         value = "62",
-#         showcase = shiny::icon("clock", class = "white-icon"),
-#         theme = value_box_theme(bg = "#91C461", fg = "white"),
-#         p("years of historical records", class = "white-text")
-#       )
-#     })
-#   })
-# }
 
 mod_home_server <- function(id, openpl,minima) {
   moduleServer(id, function(input, output, session) {

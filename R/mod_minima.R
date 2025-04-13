@@ -121,15 +121,14 @@ mod_minima_server <- function(id,lifts_data,openpl,minima){
       data_val <- data()
       max_tot <- max(data_val$df$TotalKg, na.rm = TRUE)
       if (is.finite(max_tot)) {
-        create_gauge_chart(max_tot, input$weight_class, input$category, input$sex, minima)
+        create_gauge_chart4(max_tot, input$weight_class, input$category, input$sex, minima)
       }
     })
 
-
-    create_gauge_chart <- function(best_total, weight_class, category, sex, minima) {
+    create_gauge_chart4 <- function(best_total, weight_class, category, sex, minima) {
       value <- best_total
 
-      # Filter minima based on user inputs
+      # Filter for user inputs
       filtered_minima <- minima %>%
         filter(WeightClass == weight_class, Category == category, Sex == sex)
 
@@ -137,20 +136,16 @@ mod_minima_server <- function(id,lifts_data,openpl,minima){
         stop("No matching data found in the minima data frame.")
       }
 
-      # Extract the levels
       levels <- c("R3", "R2", "R1", "N2", "N1", "Europe", "Monde")
+      level_labels <- c("Regional 3", "Regional 2", "Regional 1", "National 2", "National 1", "European", "International")
+      level_colors <- c("#333333", "#444444", "#555555", "#666666", "#888888", "#ff7f0e", "#ff4500")
 
-      # Calculate the progress as a percentage of the Monde level
       monde_value <- filtered_minima$Monde
       progress <- (value / monde_value) * 100
-
-      # Ensure progress is within bounds
       progress <- max(0, min(progress, 100))
 
-      # Calculate the percentage positions for each level
       level_percentages <- sapply(filtered_minima[levels], function(x) (x / monde_value) * 100)
 
-      # Determine the lifter's level
       lifter_level <- ""
       for (i in seq_along(levels)) {
         if (progress <= level_percentages[i]) {
@@ -158,67 +153,75 @@ mod_minima_server <- function(id,lifts_data,openpl,minima){
           break
         }
       }
-      if (lifter_level == "") {
-        lifter_level <- "Monde"
-      }
+      if (lifter_level == "") lifter_level <- "Monde"
 
-      # Create the gauge chart using plotly
+      next_level_index <- which(levels == lifter_level) + 1
+      next_level_value <- if (next_level_index <= length(levels)) filtered_minima[[levels[next_level_index]]] else NA
+      kg_to_next <- if (!is.na(next_level_value)) next_level_value - value else 0
+
+      # Add gauge chart
       gauge <- plot_ly(
         type = "indicator",
         mode = "gauge+number+delta",
-        title = list(text = paste("Your competitive level is:", lifter_level)),
-        value = value,  # Display the absolute value
-        number = list(suffix = " Kg"),  # Add the unit for the absolute value
+        value = value,
+        title = list(text = paste0("Current Level: <b style='color:orange;'>", lifter_level, "</b>")),
+        number = list(suffix = " kg", font = list(color = "white")),
+        delta = list(reference = monde_value, increasing = list(color = "orange")),
         gauge = list(
-          axis = list(range = list(0, monde_value)),
+          axis = list(range = list(0, monde_value), tickwidth = 1, tickcolor = "orange"),
+          bar = list(color = "orange"),
+          bgcolor = "black",
+          borderwidth = 2,
+          bordercolor = "white",
           steps = list(
-            list(range = c(0, level_percentages[1] * monde_value / 100), color = "#FFFFFF", name = "R3"),
-            list(range = c(level_percentages[1] * monde_value / 100, level_percentages[2] * monde_value / 100), color = "#E5E5E5", name = "R2"),
-            list(range = c(level_percentages[2] * monde_value / 100, level_percentages[3] * monde_value / 100), color = "#B3B3B3", name = "R1"),
-            list(range = c(level_percentages[3] * monde_value / 100, level_percentages[4] * monde_value / 100), color = "#7F7F7F", name = "N2"),
-            list(range = c(level_percentages[4] * monde_value / 100, level_percentages[5] * monde_value / 100), color = "#4C4C4C", name = "N1"),
-            list(range = c(level_percentages[5] * monde_value / 100, level_percentages[6] * monde_value / 100), color = "#333333", name = "Europe"),
-            list(range = c(level_percentages[6] * monde_value / 100, monde_value), color = "darkred", name = "Monde")
+            list(range = c(0, level_percentages[1] * monde_value / 100), color = "#333333"),
+            list(range = c(level_percentages[1] * monde_value / 100, level_percentages[2] * monde_value / 100), color = "#444444"),
+            list(range = c(level_percentages[2] * monde_value / 100, level_percentages[3] * monde_value / 100), color = "#555555"),
+            list(range = c(level_percentages[3] * monde_value / 100, level_percentages[4] * monde_value / 100), color = "#666666"),
+            list(range = c(level_percentages[4] * monde_value / 100, level_percentages[5] * monde_value / 100), color = "#888888"),
+            list(range = c(level_percentages[5] * monde_value / 100, level_percentages[6] * monde_value / 100), color = "#ff7f0e"),
+            list(range = c(level_percentages[6] * monde_value / 100, monde_value), color = "#ff4500")
           ),
           threshold = list(
-            line = list(color = "darkgreen", width = 4),
+            line = list(color = "white", width = 4),
             thickness = 0.75,
-            value = value  # Use the absolute value for the threshold
+            value = value
           )
         )
       )
 
-      # Add annotations for the legend, lifter level, and required value for international level
-      annotations <- list(
+      # Add left-side annotations (legend style)
+      y_positions <- seq(1, 0, length.out = length(levels))  # from top to bottom
+      left_annotations <- lapply(seq_along(levels), function(i) {
         list(
-          x = 0.1, y = -0.1, text = "Regional 3", showarrow = FALSE, bgcolor = "#FFFFFF", bordercolor = "black"
-        ),
-        list(
-          x = 0.2, y = -0.1, text = "Regional 2", showarrow = FALSE, bgcolor = "#E5E5E5", bordercolor = "black"
-        ),
-        list(
-          x = 0.3, y = -0.1, text = "Regional 1", showarrow = FALSE, bgcolor = "#B3B3B3", bordercolor = "black"
-        ),
-        list(
-          x = 0.5, y = -0.1, text = "National 2", showarrow = FALSE, bgcolor = "#7F7F7F", bordercolor = "black"
-        ),
-        list(
-          x = 0.6, y = -0.1, text = "National 1", showarrow = FALSE, bgcolor = "#4C4C4C", bordercolor = "black", font = list(color = "white")
-        ),
-        list(
-          x = 0.75, y = -0.1, text = "European", showarrow = FALSE, bgcolor = "#333333", bordercolor = "black", font = list(color = "white")
-        ),
-        list(
-          x = 0.9, y = -0.1, text = "International", showarrow = FALSE, bgcolor = "darkred", bordercolor = "black", font = list(color = "white")
-        ),
-        list(
-          x = 0.5, y = 0.0, text = paste("Total Required to be Competitive Internationally:", monde_value, "Kg"), showarrow = FALSE, font = list(size = 12, color = "black")
+          x = -0.05,  # closer to the gauge so it doesn’t get cropped
+          y = y_positions[i],
+          xref = "paper", yref = "paper",
+          text = paste0("<b>", level_labels[i], "</b>"),
+          showarrow = FALSE,
+          font = list(color = "white", size = 12),
+          bgcolor = level_colors[i],
+          bordercolor = "white",
+          borderpad = 4,
+          align = "center"
         )
+      })
+
+      # Add the bottom annotation for kg to next level
+      callout_annotation <- list(
+        x = 0.5, y = -0.2,
+        text = if (!is.na(kg_to_next))
+          paste0("<b>", kg_to_next, " kg</b> to reach next level (", levels[next_level_index], ")")
+        else "<b>Max Level Achieved!</b>",
+        showarrow = FALSE,
+        font = list(color = "#ff7f0e", size = 14)
       )
 
       gauge <- gauge %>% layout(
-        annotations = annotations,
-        margin = list(t = 100)  # Adjust top margin as needed
+        paper_bgcolor = "black",
+        font = list(color = "white"),
+        annotations = c(left_annotations, list(callout_annotation)),
+        margin = list(t = 80, b = 60, l = 80)  # add left margin for annotations
       )
 
       return(gauge)

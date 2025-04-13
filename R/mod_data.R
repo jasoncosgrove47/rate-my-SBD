@@ -11,6 +11,11 @@ mod_data_ui <- function(id) {
   ns <- NS(id)
 
   fluidPage(
+
+
+    tags$h5("If you are listed on open powerlifting, please use option 1"),
+    tags$h5("If you are not listed on open powerlifting, please use option 2"),
+
     br(),
     tags$h3("Option 1: Autofill your data from open powerlifting"),
     selectizeInput(
@@ -23,6 +28,13 @@ mod_data_ui <- function(id) {
 
     textOutput(ns("selected_item_text")),
 
+    br(),
+
+    #hmmm not sure its sensible to have this in 2 places, this is probably messing up the logic
+    selectInput(ns("tested"), "Compete in a tested federation?:", choices = c("Yes", "No")),
+
+    selectInput(ns("equipped"), "Raw or equipped lifter?:", choices = c("Raw", "Equipped")),
+
 
     br(),
     br(),
@@ -32,9 +44,10 @@ mod_data_ui <- function(id) {
     #"If using this functionality make sure that option 1 is set to No Lifter Selected"
     selectInput(ns("gender"), "Select Gender:", choices = c("Male", "Female")),
     numericInput(ns("age"), "Enter Age:", value = 25, min = 1, max = 100),
-    selectInput(ns("tested"), "Compete in a tested federation?:", choices = c("Yes", "No")),
+    selectInput(ns("tested2"), "Compete in a tested federation?:", choices = c("Yes", "No")),
     selectizeInput(ns("weight_class"), "Select Weight Class:", choices = NULL),
     selectizeInput(ns("category"), "Select Category:", choices = NULL),
+    selectInput(ns("equipped2"), "Raw or equipped lifter?:", choices = c("Raw", "Equipped")),
 
 
 
@@ -83,6 +96,8 @@ mod_data_ui <- function(id) {
 #' metrics Server Functions
 #'
 #' @noRd
+#'
+#'
 mod_data_server <- function(id,lifts_data,openpl,minima,all_lifter_names){
   moduleServer(id, function(input, output, session){
     ns <- session$ns
@@ -109,6 +124,7 @@ mod_data_server <- function(id,lifts_data,openpl,minima,all_lifter_names){
 
       selected_item <- input$selected_item %||% "No Lifter Selected"
 
+
       df <- if (selected_item == "No Lifter Selected") {
 
         data.frame(
@@ -123,7 +139,8 @@ mod_data_server <- function(id,lifts_data,openpl,minima,all_lifter_names){
             Category = rep(input$category, 5),
             Sex = rep(input$gender, 5),
             Age = rep(input$age, 5),
-            Tested = rep(input$tested, 5),
+            Equipment = rep(input$equipped2, 5),
+            Tested = rep(input$tested2, 5),
             Dots = sapply(1:5, function(i) {
               bodyweight <- input[[paste0("bodyweight", i)]]
               total_lift <- sum(input[[paste0("squat", i)]], input[[paste0("bench", i)]], input[[paste0("deadlift", i)]])
@@ -143,13 +160,24 @@ mod_data_server <- function(id,lifts_data,openpl,minima,all_lifter_names){
 
         openpl %>% filter(Name == selected_item)
 
+
       }
 
 
+      if (selected_item == "No Lifter Selected") {
 
-      # Return the reactive expression so it can be used by other modules
-      lifts_data(list(selected_item = selected_item,df = df))
+        # Return the reactive expression so it can be used by other modules
+        # safer to do the filtering elsewhere.
+        lifts_data(list(selected_item = selected_item,df = df,tested = input$tested2,equipped = input$equipped2))
 
+
+      }else{
+
+        # Return the reactive expression so it can be used by other modules
+        # safer to do the filtering elsewhere.
+        lifts_data(list(selected_item = selected_item,df = df,tested = input$tested,equipped = input$equipped))
+
+      }
     })
 
   })
