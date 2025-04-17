@@ -28,7 +28,7 @@ openpl <- openpl %>%
   select(Name,Sex, Event, Equipment, Age, AgeClass, Tested,Division,
           MeetName, Best3SquatKg, Best3BenchKg, Best3DeadliftKg,
          BodyweightKg, WeightClassKg,TotalKg,Dots,year,Comp,MeetCountry,
-         Squat1Kg,Squat2Kg,Squat3Kg, Bench1Kg,Country,
+         Squat1Kg,Squat2Kg,Squat3Kg, Bench1Kg,Country,Date,
          Bench2Kg,Bench3Kg,Deadlift1Kg,Deadlift2Kg,Deadlift3Kg)
 
 all_lifter_names <- c("No Lifter Selected", unique(openpl$Name))

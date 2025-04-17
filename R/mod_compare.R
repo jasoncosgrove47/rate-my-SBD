@@ -176,10 +176,6 @@ mod_compare_server <- function(id,lifts_data,openpl,minima){
       age <- max(lifter$Age, na.rm = TRUE)
       sex <- lifter$Sex[1]
 
-      print("SEX")
-      print(sex)
-
-
       age_range <- 5
       value <- max(lifter[[column_name]], na.rm = TRUE)
 
