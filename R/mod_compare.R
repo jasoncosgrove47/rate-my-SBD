@@ -45,6 +45,9 @@ mod_compare_ui <- function(id) {
       column(6, plotOutput(ns("dots_hist")), height = "400px")
     ),
 
+
+
+
     layout_columns(
       col_widths = c(6,6),
 
@@ -224,8 +227,11 @@ mod_compare_server <- function(id,lifts_data,openpl,minima){
         annotate("text", x = 50, y = 1, label = paste0(round(percentile, 2), "%"),
                  color = "white", size = 10, fontface = "bold") +
         # Add contextual information
-        annotate("text", x = 50, y = 1.8, label = paste("Your",annot_map[column_name] ,"is better than that of \n", round(percentile, 2), "% of other lifters at in your category."),
-                 color = "black", size = 5, fontface = "bold") +
+        annotate("text", x = 50, y = 1.8, label = paste("Your",annot_map[column_name] ," is \n better than that of", round(percentile, 2), "% \n of other lifters in your category."),
+                 color = "black", size = 4, fontface = "bold") +
+
+        # annotate("text", x = 50, y = 1.8, label = paste("Your",annot_map[column_name] ,"is better than that of \n", round(percentile, 2), "% of other lifters at in your category."),
+        #          color = "black", size = 5, fontface = "bold") +
         # Formatting
         theme_void() +
         coord_cartesian(xlim = c(0, 100), ylim = c(0, 2)) +

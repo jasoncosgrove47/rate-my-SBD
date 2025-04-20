@@ -7,91 +7,190 @@
 #' @noRd
 #'
 #' @importFrom shiny NS tagList
+
 mod_data_ui <- function(id) {
   ns <- NS(id)
 
   fluidPage(
 
-
-    tags$h5("If you are listed on open powerlifting, please use option 1"),
-    tags$h5("If you are not listed on open powerlifting, please use option 2"),
-
-    br(),
-    tags$h3("Option 1: Autofill your data from open powerlifting"),
-    selectizeInput(
-      inputId = ns("selected_item"),
-      label = "Select your name, exactly as it appears on your openPL profile:",
-      choices = NULL, # Set choices to NULL for server-side processing
-      options = list(maxOptions = 50) # Optional: limit the number of options displayed at once
+    # Stylized instruction block
+    div(
+      style = "background-color: #f8f9fa; border-left: 5px solid #007bff; padding: 15px; margin-bottom: 20px;",
+      tags$h4("📌 How to Use This Page", style = "font-weight: bold;"),
+      tags$p("👉 If you're listed on OpenPowerlifting, use Option 1 (Autofill)."),
+      tags$p("👉 If not, use Option 2 (Manual Input) below."),
+      tags$p("⚠️ Please only use one option at a time.")
     ),
 
-
-    textOutput(ns("selected_item_text")),
-
-    br(),
-
-    #hmmm not sure its sensible to have this in 2 places, this is probably messing up the logic
-    selectInput(ns("tested"), "Compete in a tested federation?:", choices = c("Yes", "No")),
-
-    selectInput(ns("equipped"), "Raw or equipped lifter?:", choices = c("Raw", "Equipped")),
-
-
-    br(),
-    br(),
-
-    tags$h3("Option 2: Manually input your details"),
-    tags$h5("If using this functionality make sure that option 1 is set to << No Lifter Selected >>"),
-    #"If using this functionality make sure that option 1 is set to No Lifter Selected"
-    selectInput(ns("gender"), "Select Gender:", choices = c("Male", "Female")),
-    numericInput(ns("age"), "Enter Age:", value = 25, min = 1, max = 100),
-    selectInput(ns("tested2"), "Compete in a tested federation?:", choices = c("Yes", "No")),
-    selectizeInput(ns("weight_class"), "Select Weight Class:", choices = NULL),
-    selectizeInput(ns("category"), "Select Category:", choices = NULL),
-    selectInput(ns("equipped2"), "Raw or equipped lifter?:", choices = c("Raw", "Equipped")),
-
-
-
+    # Input method selection
+    radioButtons(
+      inputId = ns("input_method"),
+      label = tags$h4("Select Input Method:"),
+      choices = c("Option 1: Autofill from OpenPowerlifting" = "autofill",
+                  "Option 2: Manually enter your details" = "manual"),
+      selected = "autofill",
+      inline = FALSE
+    ),
 
     br(),
-    br(),
 
-    # Input fields for 5 training block
-    lapply(1:5, function(i) {
-      card(
-        full_screen = FALSE,
-        fill = FALSE,
-        card_header(
-          tags$h4(paste("Training Block", i), style = "font-weight: bold;")
-        ),
-        layout_columns(
+    # ---------------------- Option 1 ----------------------
+    conditionalPanel(
+      condition = sprintf("input['%s'] == 'autofill'", ns("input_method")),
+      tags$h3("🔍 Autofill Your Data"),
+      tags$p("Please select your name exactly as it appears on OpenPowerlifting."),
+      selectizeInput(
+        inputId = ns("selected_item"),
+        label = "Your Name:",
+        choices = NULL,
+        options = list(maxOptions = 50)
+      ),
+      textOutput(ns("selected_item_text")),
+      selectInput(ns("tested"), "Compete in a tested federation?", choices = c("Yes", "No")),
+      selectInput(ns("equipped"), "Raw or equipped lifter?", choices = c("Raw", "Equipped"))
+    ),
+
+    # ---------------------- Option 2 ----------------------
+    conditionalPanel(
+      condition = sprintf("input['%s'] == 'manual'", ns("input_method")),
+      tags$h3("✍️ Manually Input Your Data"),
+      tags$p("Only use this section if you're not listed on OpenPowerlifting."),
+      selectInput(ns("gender"), "Select Gender:", choices = c("Male", "Female")),
+      numericInput(ns("age"), "Enter Age:", value = 25, min = 1, max = 100),
+      selectInput(ns("tested2"), "Compete in a tested federation?", choices = c("Yes", "No")),
+      selectizeInput(ns("weight_class"), "Select Weight Class:", choices = NULL),
+      selectizeInput(ns("category"), "Select Category:", choices = NULL),
+      selectInput(ns("equipped2"), "Raw or equipped lifter?", choices = c("Raw", "Equipped")),
+
+      br(),
+      br(),
+
+      # Now wrap the training blocks in the same conditional panel
+      lapply(1:5, function(i) {
+        card(
+          full_screen = FALSE,
           fill = FALSE,
-          col_widths = 12,
-          card(
-            class = "p-2",
-            h6("Squat (kg)", class = "m-0"),
-            numericInput(ns(paste0("squat", i)), NULL, value = NULL, min = 0)
+          card_header(
+            tags$h4(paste("Training Block", i), style = "font-weight: bold;")
           ),
-          card(
-            class = "p-2",
-            h6("Bench (kg)", class = "m-0"),
-            numericInput(ns(paste0("bench", i)), NULL, value = NULL, min = 0)
-          ),
-          card(
-            class = "p-2",
-            h6("Deadlift (kg)", class = "m-0"),
-            numericInput(ns(paste0("deadlift", i)), NULL, value = NULL, min = 0)
-          ),
-          card(
-            class = "p-2",
-            h6("Bodyweight (kg)", class = "m-0"),
-            numericInput(ns(paste0("bodyweight", i)), NULL, value = NULL, min = 0)
+          layout_columns(
+            fill = FALSE,
+            col_widths = 12,
+            card(
+              class = "p-2",
+              h6("Squat (kg)", class = "m-0"),
+              numericInput(ns(paste0("squat", i)), NULL, value = NULL, min = 0)
+            ),
+            card(
+              class = "p-2",
+              h6("Bench (kg)", class = "m-0"),
+              numericInput(ns(paste0("bench", i)), NULL, value = NULL, min = 0)
+            ),
+            card(
+              class = "p-2",
+              h6("Deadlift (kg)", class = "m-0"),
+              numericInput(ns(paste0("deadlift", i)), NULL, value = NULL, min = 0)
+            ),
+            card(
+              class = "p-2",
+              h6("Bodyweight (kg)", class = "m-0"),
+              numericInput(ns(paste0("bodyweight", i)), NULL, value = NULL, min = 0)
+            )
           )
         )
-      )
-    }) #lapply
+      }) # end lapply
+    ) # end conditionalPanel for manual
 
-  )#fluid page
+  ) # end fluidPage
 }
+
+
+
+# mod_data_ui <- function(id) {
+#   ns <- NS(id)
+#
+#   fluidPage(
+#
+#
+#     tags$h5("If you are listed on open powerlifting, please use option 1"),
+#     tags$h5("If you are not listed on open powerlifting, please use option 2"),
+#
+#     br(),
+#     tags$h3("Option 1: Autofill your data from open powerlifting"),
+#     selectizeInput(
+#       inputId = ns("selected_item"),
+#       label = "Select your name, exactly as it appears on your openPL profile:",
+#       choices = NULL, # Set choices to NULL for server-side processing
+#       options = list(maxOptions = 50) # Optional: limit the number of options displayed at once
+#     ),
+#
+#
+#     textOutput(ns("selected_item_text")),
+#
+#     br(),
+#
+#     #hmmm not sure its sensible to have this in 2 places, this is probably messing up the logic
+#     selectInput(ns("tested"), "Compete in a tested federation?:", choices = c("Yes", "No")),
+#
+#     selectInput(ns("equipped"), "Raw or equipped lifter?:", choices = c("Raw", "Equipped")),
+#
+#
+#     br(),
+#     br(),
+#
+#     tags$h3("Option 2: Manually input your details"),
+#     tags$h5("If using this functionality make sure that option 1 is set to << No Lifter Selected >>"),
+#     #"If using this functionality make sure that option 1 is set to No Lifter Selected"
+#     selectInput(ns("gender"), "Select Gender:", choices = c("Male", "Female")),
+#     numericInput(ns("age"), "Enter Age:", value = 25, min = 1, max = 100),
+#     selectInput(ns("tested2"), "Compete in a tested federation?:", choices = c("Yes", "No")),
+#     selectizeInput(ns("weight_class"), "Select Weight Class:", choices = NULL),
+#     selectizeInput(ns("category"), "Select Category:", choices = NULL),
+#     selectInput(ns("equipped2"), "Raw or equipped lifter?:", choices = c("Raw", "Equipped")),
+#
+#
+#
+#
+#     br(),
+#     br(),
+#
+#     # Input fields for 5 training block
+#     lapply(1:5, function(i) {
+#       card(
+#         full_screen = FALSE,
+#         fill = FALSE,
+#         card_header(
+#           tags$h4(paste("Training Block", i), style = "font-weight: bold;")
+#         ),
+#         layout_columns(
+#           fill = FALSE,
+#           col_widths = 12,
+#           card(
+#             class = "p-2",
+#             h6("Squat (kg)", class = "m-0"),
+#             numericInput(ns(paste0("squat", i)), NULL, value = NULL, min = 0)
+#           ),
+#           card(
+#             class = "p-2",
+#             h6("Bench (kg)", class = "m-0"),
+#             numericInput(ns(paste0("bench", i)), NULL, value = NULL, min = 0)
+#           ),
+#           card(
+#             class = "p-2",
+#             h6("Deadlift (kg)", class = "m-0"),
+#             numericInput(ns(paste0("deadlift", i)), NULL, value = NULL, min = 0)
+#           ),
+#           card(
+#             class = "p-2",
+#             h6("Bodyweight (kg)", class = "m-0"),
+#             numericInput(ns(paste0("bodyweight", i)), NULL, value = NULL, min = 0)
+#           )
+#         )
+#       )
+#     }) #lapply
+#
+#   )#fluid page
+# }
 
 #' metrics Server Functions
 #'

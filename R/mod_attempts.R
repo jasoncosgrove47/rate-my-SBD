@@ -9,34 +9,40 @@
 #' @import tidyr
 #'
 #' @importFrom shiny NS tagList
+
+
+
 mod_attempts_ui <- function(id) {
   ns <- NS(id)
 
   fluidPage(
-    # Title
-
     # First Row: Text Output
     fluidRow(
       column(12, textOutput(ns("textOutput")))
     ),
+
+    # Second Row: Success Plot
     fluidRow(
-      column(10,offset=1, plotOutput(ns("success_plot")))
+      column(10, offset = 1, plotOutput(ns("success_plot")))
     ),
+
+    # Third Row: Attempts Summary with scrollable plot
     fluidRow(
       column(12,
              card(
                full_screen = TRUE,
                card_header("Attempts Summary",
                            style = "background-color: black; color: white; font-weight: bold; padding: 10px;"),
-               plotOutput(ns("attempts_plot"))
+               div(
+                 style = "overflow-x: auto; width: 100%;",
+                 plotOutput(ns("attempts_plot"), height = "500px", width = "1000px")  # Wider width triggers scroll
+               )
              )
       )
     )
   )
-
-
-
 }
+
 
 #' metrics Server Functions
 #'
@@ -83,6 +89,59 @@ mod_attempts_server <- function(id,lifts_data,openpl,minima){
 
     })
 
+
+    plot_Attempts_tmp <- function(lifter) {
+      tmp <- lifter %>% select(
+        Comp,
+        Squat1Kg, Squat2Kg, Squat3Kg,
+        Bench1Kg, Bench2Kg, Bench3Kg,
+        Deadlift1Kg, Deadlift2Kg, Deadlift3Kg
+      )
+
+      lifter_long <- tmp %>%
+        pivot_longer(cols = -Comp, names_to = "Lift", values_to = "Value") %>%
+        mutate(Color = ifelse(Value > 0, "Made", "Missed")) %>%
+        mutate(
+          Lift2 = recode(Lift,
+                         "Bench1Kg" = "Bench\n1st",
+                         "Bench2Kg" = "Bench\n2nd",
+                         "Bench3Kg" = "Bench\n3rd",
+                         "Deadlift1Kg" = "Deadlift\n1st",
+                         "Deadlift2Kg" = "Deadlift\n2nd",
+                         "Deadlift3Kg" = "Deadlift\n3rd",
+                         "Squat1Kg" = "Squat\n1st",
+                         "Squat2Kg" = "Squat\n2nd",
+                         "Squat3Kg" = "Squat\n3rd"
+          )
+        )
+
+      ggplot(lifter_long, aes(x = factor(Comp), y = Lift2, fill = Color)) +
+        geom_tile(color = "white", linewidth = 0.6) +
+        geom_text(
+          aes(label = Value),
+          color = "black",
+          size = 3.5,
+          fontface = "bold"
+        ) +
+        scale_fill_manual(values = c("Made" = "#B9E7B1", "Missed" = "#FF4C4C")) +  # Brighter red
+        labs(
+          title = "Attempts Summary",
+          x = "Competition",
+          y = "Attempt"
+        ) +
+        theme_minimal(base_size = 12) +
+        theme(
+          plot.title = element_text(hjust = 0.5, face = "bold", size = 14),
+          axis.title.x = element_text(face = "bold", size = 12),
+          axis.title.y = element_text(face = "bold", size = 12),
+          axis.text.x = element_text(angle = 60, hjust = 1, size = 10),
+          axis.text.y = element_text(size = 10),
+          panel.grid = element_blank(),
+          legend.position = "none",
+          plot.margin = margin(10, 10, 10, 10)
+        )
+    }
+
 plot_Attempts <- function(lifter){
 
 
@@ -120,7 +179,7 @@ plot_Attempts <- function(lifter){
       # Create the heatmap
       ggplot(lifter_long, aes(x = factor(Comp), y = Lift2, fill = Color)) +
         geom_tile(color = "white") +
-        geom_text(aes(label = Value), color = "black", size = 2.5) +
+        geom_text(aes(label = Value), color = "black", size = 2.5, fontface = "bold") +
         scale_fill_manual(values = c("Positive" = "lightgreen", "Negative" = "red")) +
         labs(
           title = "Attempt Selection",
@@ -132,7 +191,7 @@ plot_Attempts <- function(lifter){
           plot.title = element_text(hjust = 0.5, face = "bold"),
           axis.title.x = element_text(face = "bold"),
           axis.title.y = element_text(face = "bold"),
-          axis.text.x = element_text(angle = 45, hjust = 1),
+          axis.text.x = element_text(angle = 60, hjust = 1),
           legend.position = "none"
         )
 
@@ -182,8 +241,8 @@ calculate_success_rate <- function(lifter){
     annotate("text", x = 50, y = 1, label = paste0(round(percentile, 2), "%"),
              color = "white", size = 10, fontface = "bold") +
     # Add contextual information
-    annotate("text", x = 50, y = 1.8, label = paste("You have successfully made", round(percentile, 2), "% \n of all lifts attempted. The average success rate across all lifters is 77% "),
-             color = "black", size = 5, fontface = "bold") +
+    annotate("text", x = 50, y = 1.8, label = paste("You have successfully made", round(percentile, 2), "% \n of all lifts attempted. The average \n successrate across all lifters is 77% "),
+             color = "black", size = 4, fontface = "bold") +
     # Formatting
     theme_void() +
     coord_cartesian(xlim = c(0, 100), ylim = c(0, 2)) +
