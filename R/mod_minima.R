@@ -131,9 +131,383 @@ mod_minima_server <- function(id,lifts_data,openpl,minima){
       data_val <- data()
       max_tot <- max(data_val$df$TotalKg, na.rm = TRUE)
       if (is.finite(max_tot)) {
-        create_gauge_chart4(max_tot, input$weight_class, input$category, input$sex, minima)
+        create_gauge_chart7(max_tot, input$weight_class, input$category, input$sex, minima)
       }
     })
+
+
+    create_gauge_chart7 <- function(best_total, weight_class, category, sex, minima) {
+      value <- best_total
+
+      # Filter for user inputs
+      filtered_minima <- minima %>%
+        filter(WeightClass == weight_class, Category == category, Sex == sex)
+
+      if (nrow(filtered_minima) == 0) {
+        stop("No matching data found in the minima data frame.")
+      }
+
+      # Define levels and styles
+      levels <- c("R3", "R2", "R1", "N2", "N1", "Europe", "Monde")
+      level_labels <- c("Regional 3", "Regional 2", "Regional 1", "National 2", "National 1", "European", "International")
+      level_colors <- c("#333333", "#444444", "#555555", "#666666", "#888888", "#ff7f0e", "#ff4500")
+
+      monde_value <- filtered_minima$Monde
+      progress <- (value / monde_value) * 100
+      progress <- max(0, min(progress, 100))  # clamp
+
+      level_percentages <- sapply(filtered_minima[levels], function(x) (x / monde_value) * 100)
+
+      # Determine lifter level
+      lifter_level <- ""
+      for (i in seq_along(levels)) {
+        if (progress <= level_percentages[i]) {
+          lifter_level <- levels[i]
+          break
+        }
+      }
+      if (lifter_level == "") lifter_level <- "Monde"
+
+      next_level_index <- which(levels == lifter_level) + 1
+      next_level_value <- if (next_level_index <= length(levels)) filtered_minima[[levels[next_level_index]]] else NA
+      kg_to_next <- if (!is.na(next_level_value)) next_level_value - value else 0
+
+      # Build gauge steps
+      steps_list <- list()
+      for (i in seq_along(level_percentages)) {
+        from <- if (i == 1) 0 else level_percentages[i - 1] * monde_value / 100
+        to <- level_percentages[i] * monde_value / 100
+        steps_list[[i]] <- list(range = c(from, to), color = level_colors[i])
+      }
+
+      # Create annotations, two columns for better readability
+      label_annotations_left <- lapply(seq(1, length(levels) / 2), function(i) {
+        list(
+          x = 0.35,  # Left side column
+          y = -0.3 - 0.2 * (i - 1),  # Increased space between annotations
+          xref = "paper", yref = "paper",
+          text = paste0("<b>", level_labels[i], "</b>"),
+          showarrow = FALSE,
+          font = list(color = "white", size = 10),  # Increased font size
+          bgcolor = level_colors[i],
+          bordercolor = "white",
+          borderwidth = 1,
+          borderpad = 4,
+          align = "center"
+        )
+      })
+
+      label_annotations_right <- lapply(seq((length(levels) / 2) + 1, length(levels)), function(i) {
+        list(
+          x = 0.65,  # Right side column
+          y = -0.3 - 0.2 * (i - length(levels) / 2 - 1),  # Increased space between annotations
+          xref = "paper", yref = "paper",
+          text = paste0("<b>", level_labels[i], "</b>"),
+          showarrow = FALSE,
+          font = list(color = "white", size = 10),  # Increased font size
+          bgcolor = level_colors[i],
+          bordercolor = "white",
+          borderwidth = 1,
+          borderpad = 4,
+          align = "center"
+        )
+      })
+
+      # Bottom annotation for kg to next level (move it beside title)
+      next_level_text <- if (!is.na(kg_to_next) && kg_to_next > 0) {
+        paste0("<b>", kg_to_next, " kg</b> to reach next level")
+      } else if (is.na(kg_to_next) || kg_to_next <= 0) {
+        "<b>Max Level Achieved!</b>"
+      }
+
+      # Create the title and place next to it
+      # callout_annotation <- list(
+      #   x = 0.5, y = 1.1,  # Place next to title
+      #   text = next_level_text,
+      #   showarrow = FALSE,
+      #   font = list(color = "#ff7f0e", size = 16),  # Font size for better readability
+      #   align = "center"
+      # )
+
+      # Plotly gauge
+      gauge <- plot_ly(
+        type = "indicator",
+        mode = "gauge+number+delta",
+        value = value,
+        title = list(
+          text = paste0("Current Level: <b style='color:orange;'>", lifter_level, "</b><br><span style='font-size:14px;'>", next_level_text, "</span>"),
+          font = list(color = "white", size = 18)
+        ),
+        #title = list(text = paste0("Current Level: <b style='color:orange;'>", lifter_level," - ",next_level_text, "</b>")),
+        number = list(suffix = " kg", font = list(color = "white")),
+        delta = list(reference = next_level_value, increasing = list(color = "orange")),
+        gauge = list(
+          axis = list(range = list(0, monde_value), tickwidth = 1, tickcolor = "orange"),
+          bar = list(color = "orange"),
+          bgcolor = "black",
+          borderwidth = 2,
+          bordercolor = "white",
+          steps = steps_list,
+          threshold = list(
+            line = list(color = "white", width = 4),
+            thickness = 0.75,
+            value = value
+          )
+        )
+      ) %>% layout(
+        paper_bgcolor = "black",
+        font = list(color = "white"),
+        annotations = c(label_annotations_left, label_annotations_right),
+        margin = list(t = 80, b = 240, l = 40, r = 40),  # Increased bottom margin for more space
+        height = 600,  # Set the height of the plot to make it bigger
+        autosize = TRUE  # Make the plot responsive
+      )
+
+      return(gauge)
+    }
+
+
+
+
+
+
+
+    create_gauge_chart6 <- function(best_total, weight_class, category, sex, minima) {
+      value <- best_total
+
+      # Filter for user inputs
+      filtered_minima <- minima %>%
+        filter(WeightClass == weight_class, Category == category, Sex == sex)
+
+      if (nrow(filtered_minima) == 0) {
+        stop("No matching data found in the minima data frame.")
+      }
+
+      # Define levels and styles
+      levels <- c("R3", "R2", "R1", "N2", "N1", "Europe", "Monde")
+      level_labels <- c("Regional 3", "Regional 2", "Regional 1", "National 2", "National 1", "European", "International")
+      level_colors <- c("#333333", "#444444", "#555555", "#666666", "#888888", "#ff7f0e", "#ff4500")
+
+      monde_value <- filtered_minima$Monde
+      progress <- (value / monde_value) * 100
+      progress <- max(0, min(progress, 100))  # clamp
+
+      level_percentages <- sapply(filtered_minima[levels], function(x) (x / monde_value) * 100)
+
+      # Determine lifter level
+      lifter_level <- ""
+      for (i in seq_along(levels)) {
+        if (progress <= level_percentages[i]) {
+          lifter_level <- levels[i]
+          break
+        }
+      }
+      if (lifter_level == "") lifter_level <- "Monde"
+
+      next_level_index <- which(levels == lifter_level) + 1
+      next_level_value <- if (next_level_index <= length(levels)) filtered_minima[[levels[next_level_index]]] else NA
+      kg_to_next <- if (!is.na(next_level_value)) next_level_value - value else 0
+
+      # Build gauge steps
+      steps_list <- list()
+      for (i in seq_along(level_percentages)) {
+        from <- if (i == 1) 0 else level_percentages[i - 1] * monde_value / 100
+        to <- level_percentages[i] * monde_value / 100
+        steps_list[[i]] <- list(range = c(from, to), color = level_colors[i])
+      }
+
+      # Create annotations, two columns for better readability
+      label_annotations_left <- lapply(seq(1, length(levels) / 2), function(i) {
+        list(
+          x = 0.25,  # Left side column
+          y = -0.3 - 0.2 * (i - 1),  # Increased space between annotations
+          xref = "paper", yref = "paper",
+          text = paste0("<b>", level_labels[i], "</b>"),
+          showarrow = FALSE,
+          font = list(color = "white", size = 14),  # Increased font size
+          bgcolor = level_colors[i],
+          bordercolor = "white",
+          borderwidth = 1,
+          borderpad = 4,
+          align = "center"
+        )
+      })
+
+      label_annotations_right <- lapply(seq((length(levels) / 2) + 1, length(levels)), function(i) {
+        list(
+          x = 0.75,  # Right side column
+          y = -0.3 - 0.2 * (i - length(levels) / 2 - 1),  # Increased space between annotations
+          xref = "paper", yref = "paper",
+          text = paste0("<b>", level_labels[i], "</b>"),
+          showarrow = FALSE,
+          font = list(color = "white", size = 14),  # Increased font size
+          bgcolor = level_colors[i],
+          bordercolor = "white",
+          borderwidth = 1,
+          borderpad = 4,
+          align = "center"
+        )
+      })
+
+      # Bottom annotation for kg to next level (with proper handling for NA)
+      next_level_text <- if (!is.na(kg_to_next) && kg_to_next > 0) {
+        paste0("<b>", kg_to_next, " kg</b> to reach next level (", levels[next_level_index], ")")
+      } else if (is.na(kg_to_next) || kg_to_next <= 0) {
+        "<b>Max Level Achieved!</b>"
+      }
+
+      callout_annotation <- list(
+        x = 0.5, y = -0.3 - 0.2 * (length(levels) + 1),  # Adjust the y position to keep it at the bottom
+        text = next_level_text,
+        showarrow = FALSE,
+        font = list(color = "#ff7f0e", size = 16)  # Font size for better readability
+      )
+
+      # Plotly gauge
+      gauge <- plot_ly(
+        type = "indicator",
+        mode = "gauge+number+delta",
+        value = value,
+        title = list(text = paste0("Current Level: <b style='color:orange;'>", lifter_level, "</b>")),
+        number = list(suffix = " kg", font = list(color = "white")),
+        delta = list(reference = monde_value, increasing = list(color = "orange")),
+        gauge = list(
+          axis = list(range = list(0, monde_value), tickwidth = 1, tickcolor = "orange"),
+          bar = list(color = "orange"),
+          bgcolor = "black",
+          borderwidth = 2,
+          bordercolor = "white",
+          steps = steps_list,
+          threshold = list(
+            line = list(color = "white", width = 4),
+            thickness = 0.75,
+            value = value
+          )
+        )
+      ) %>% layout(
+        paper_bgcolor = "black",
+        font = list(color = "white"),
+        annotations = c(label_annotations_left, label_annotations_right, list(callout_annotation)),
+        margin = list(t = 80, b = 240, l = 40, r = 40),  # Increased bottom margin for more space
+        height = 600,  # Set the height of the plot to make it bigger
+        autosize = TRUE  # Make the plot responsive
+      )
+
+      return(gauge)
+    }
+
+
+
+
+    create_gauge_chart5 <- function(best_total, weight_class, category, sex, minima) {
+      value <- best_total
+
+      # Filter for user inputs
+      filtered_minima <- minima %>%
+        filter(WeightClass == weight_class, Category == category, Sex == sex)
+
+      if (nrow(filtered_minima) == 0) {
+        stop("No matching data found in the minima data frame.")
+      }
+
+      # Define levels and styles
+      levels <- c("R3", "R2", "R1", "N2", "N1", "Europe", "Monde")
+      level_labels <- c("Regional 3", "Regional 2", "Regional 1", "National 2", "National 1", "European", "International")
+      level_colors <- c("#333333", "#444444", "#555555", "#666666", "#888888", "#ff7f0e", "#ff4500")
+
+      monde_value <- filtered_minima$Monde
+      progress <- (value / monde_value) * 100
+      progress <- max(0, min(progress, 100))  # clamp
+
+      level_percentages <- sapply(filtered_minima[levels], function(x) (x / monde_value) * 100)
+
+      # Determine lifter level
+      lifter_level <- ""
+      for (i in seq_along(levels)) {
+        if (progress <= level_percentages[i]) {
+          lifter_level <- levels[i]
+          break
+        }
+      }
+      if (lifter_level == "") lifter_level <- "Monde"
+
+      next_level_index <- which(levels == lifter_level) + 1
+      next_level_value <- if (next_level_index <= length(levels)) filtered_minima[[levels[next_level_index]]] else NA
+      kg_to_next <- if (!is.na(next_level_value)) next_level_value - value else 0
+
+      # Build gauge steps
+      steps_list <- list()
+      for (i in seq_along(level_percentages)) {
+        from <- if (i == 1) 0 else level_percentages[i - 1] * monde_value / 100
+        to <- level_percentages[i] * monde_value / 100
+        steps_list[[i]] <- list(range = c(from, to), color = level_colors[i])
+      }
+
+      # Create vertically stacked annotations with more space between them
+      label_annotations <- lapply(seq_along(levels), function(i) {
+        list(
+          x = 0.5,
+          y = -0.25 - 0.08 * (i - 1),  # Increased space between annotations
+          xref = "paper", yref = "paper",
+          text = paste0("<b>", level_labels[i], "</b>"),
+          showarrow = FALSE,
+          font = list(color = "white", size = 10),  # Reduced size for mobile readability
+          bgcolor = level_colors[i],
+          bordercolor = "white",
+          borderwidth = 1,
+          borderpad = 4,
+          align = "center"
+        )
+      })
+
+      # Bottom annotation for kg to next level (with proper handling for NA)
+      next_level_text <- if (!is.na(kg_to_next) && kg_to_next > 0) {
+        paste0("<b>", kg_to_next, " kg</b> to reach next level (", levels[next_level_index], ")")
+      } else if (is.na(kg_to_next) || kg_to_next <= 0) {
+        "<b>Max Level Achieved!</b>"
+      }
+
+      callout_annotation <- list(
+        x = 0.5, y = -0.25 - 0.08 * (length(levels) + 1),  # Adjust the y position to keep it at the bottom
+        text = next_level_text,
+        showarrow = FALSE,
+        font = list(color = "#ff7f0e", size = 12)
+      )
+
+      # Plotly gauge
+      gauge <- plot_ly(
+        type = "indicator",
+        mode = "gauge+number+delta",
+        value = value,
+        title = list(text = paste0("Current Level: <b style='color:orange;'>", lifter_level, "</b>")),
+        number = list(suffix = " kg", font = list(color = "white")),
+        delta = list(reference = monde_value, increasing = list(color = "orange")),
+        gauge = list(
+          axis = list(range = list(0, monde_value), tickwidth = 1, tickcolor = "orange"),
+          bar = list(color = "orange"),
+          bgcolor = "black",
+          borderwidth = 2,
+          bordercolor = "white",
+          steps = steps_list,
+          threshold = list(
+            line = list(color = "white", width = 4),
+            thickness = 0.75,
+            value = value
+          )
+        )
+      ) %>% layout(
+        paper_bgcolor = "black",
+        font = list(color = "white"),
+        annotations = c(label_annotations, list(callout_annotation)),
+        margin = list(t = 60, b = 200, l = 40, r = 40),  # Larger bottom margin for space
+        autosize = TRUE  # Make the plot responsive
+      )
+
+      return(gauge)
+    }
+
+
+
 
     create_gauge_chart4 <- function(best_total, weight_class, category, sex, minima) {
       value <- best_total

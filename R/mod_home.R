@@ -16,7 +16,11 @@ mod_home_ui <- function(id) {
     div(style = "text-align: center;",
         h1(HTML("Welcome to Rate my <b>S</b>quat <b>B</b>ench <b>D</b>eadlift!"))
     ),
-    layout_column_wrap(min_height = 200, max_height = 200, width = 1/4,
+    layout_column_wrap(  width = "300px", # Instead of a fraction
+                        fill = TRUE,
+                        min_height = "auto",
+                        #min_height = 200,
+                        #max_height = 200,
 
                        uiOutput(ns("box_entries")),
                        uiOutput(ns("box_lifters")),
