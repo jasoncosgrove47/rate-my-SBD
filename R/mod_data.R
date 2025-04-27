@@ -143,7 +143,7 @@ mod_data_server <- function(id,lifts_data,openpl,minima,all_lifter_names){
         data.frame(
             Comp = 1:5,
             year = 1:5,
-            Date = Sys.Date() - 1:5,
+            Date = Sys.Date() + 1:5,
             MeetName = paste("SBD",1:5),
             Best3SquatKg = sapply(1:5, function(i) input[[paste0("squat", i)]]),
             Best3BenchKg = sapply(1:5, function(i) input[[paste0("bench", i)]]),
