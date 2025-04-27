@@ -166,7 +166,7 @@ create_lift_plot <- function(data, lift_name) {
         angle = 60,
         hjust = 1,
         vjust = 1,
-        size = 8
+        size = 7
       ),
       panel.grid.major = element_line(
         color = "grey90",
