@@ -31,9 +31,13 @@ openpl <- openpl %>%
          Squat1Kg,Squat2Kg,Squat3Kg, Bench1Kg,Country,Date,
          Bench2Kg,Bench3Kg,Deadlift1Kg,Deadlift2Kg,Deadlift3Kg)
 
+
+openpl <- openpl %>% filter(Age >= 14, !(is.na(Age)), !is.na(Sex),!is.na(BodyweightKg),!is.na(Division))
+openpl <- openpl %>% filter(!is.na(Best3SquatKg) | !is.na(Best3BenchKg) | !is.na(Best3DeadliftKg))
+
 all_lifter_names <- c("No Lifter Selected", unique(openpl$Name))
 
-saveRDS(openpl, "data/openpl.rds")
+
 saveRDS(minima, "data/minima.rds")
 # Save the all_lifter_names to a file
 saveRDS(all_lifter_names, "data/all_lifter_names.rds")
