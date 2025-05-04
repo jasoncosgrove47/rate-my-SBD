@@ -158,6 +158,8 @@ mod_data_server <- function(id,lifts_data){
           Tested == tested
         )
 
+
+
       df <- if (selected_item == "No Lifter Selected") {
         data.frame(
           Comp = 1:5,
@@ -168,12 +170,15 @@ mod_data_server <- function(id,lifts_data){
           Best3BenchKg = sapply(1:5, function(i) input[[paste0("bench", i)]]),
           Best3DeadliftKg = sapply(1:5, function(i) input[[paste0("deadlift", i)]]),
           BodyweightKg = sapply(1:5, function(i) input[[paste0("bodyweight", i)]]),
+
+
           WeightClassKg = rep(input$weight_class, 5),
           Category = rep(input$category, 5),
           Sex = rep(input$gender, 5),
           Age = rep(input$age, 5),
           Equipment = rep(input$equipped2, 5),
           Tested = rep(input$tested2, 5),
+
           Dots = sapply(1:5, function(i) {
             bodyweight <- input[[paste0("bodyweight", i)]]
             total_lift <- sum(input[[paste0("squat", i)]], input[[paste0("bench", i)]], input[[paste0("deadlift", i)]])
@@ -182,7 +187,27 @@ mod_data_server <- function(id,lifts_data){
           }),
           TotalKg = sapply(1:5, function(i) {
             sum(input[[paste0("squat", i)]], input[[paste0("bench", i)]], input[[paste0("deadlift", i)]])
-          }),
+          })
+
+          # Dots = sapply(1:5, function(i) {
+          #   bodyweight <- input[[paste0("bodyweight", i)]]
+          #   squat <- input[[paste0("squat", i)]]
+          #   bench <- input[[paste0("bench", i)]]
+          #   deadlift <- input[[paste0("deadlift", i)]]
+          #   total_lift <- squat + bench + deadlift
+          #   is_female <- input$gender == "Female"
+          #   calculate_dots(bodyweight, total_lift, is_female)
+          # }),
+          #
+          # TotalKg = sapply(1:5, function(i) {
+          #   squat <- input[[paste0("squat", i)]]
+          #   bench <- input[[paste0("bench", i)]]
+          #   deadlift <- input[[paste0("deadlift", i)]]
+          #   squat + bench + deadlift
+          # })
+
+
+
         )
       } else {
         if (nrow(openpl) > 0) {
@@ -200,20 +225,21 @@ mod_data_server <- function(id,lifts_data){
 
       percentages <- list(
         Best3SquatKg =
-        calculate_pct(lifter_age, lifter_sex, lifter_weightclass, openpl, "Best3SquatKg", df$Best3SquatKg),
+        calculate_pct(lifter_age, lifter_sex, lifter_weightclass, openpl, "Best3SquatKg", max(df$Best3SquatKg,na.rm = TRUE)),
         Best3BenchKg =
-        calculate_pct(lifter_age, lifter_sex, lifter_weightclass,  openpl, "Best3BenchKg", df$Best3BenchKg),
+        calculate_pct(lifter_age, lifter_sex, lifter_weightclass,  openpl, "Best3BenchKg", max(df$Best3BenchKg,na.rm = TRUE)),
         Best3DeadliftKg =
-        calculate_pct(lifter_age, lifter_sex, lifter_weightclass, openpl, "Best3DeadliftKg", df$Best3DeadliftKg),
+        calculate_pct(lifter_age, lifter_sex, lifter_weightclass, openpl, "Best3DeadliftKg", max(df$Best3DeadliftKg,na.rm = TRUE)),
 
         Dots =
-        calculate_pct(lifter_age, lifter_sex, lifter_weightclass,  openpl, "Dots", df$Dots),
+        calculate_pct(lifter_age, lifter_sex, lifter_weightclass,  openpl, "Dots", max(df$Dots,na.rm = TRUE)),
 
         TotalKg =
-        calculate_pct(lifter_age, lifter_sex, lifter_weightclass, openpl, "TotalKg", df$TotalKg)
+        calculate_pct(lifter_age, lifter_sex, lifter_weightclass, openpl, "TotalKg", max(df$TotalKg,na.rm = TRUE))
       )
 
       # Store processed data in a shared reactiveVal
+
 
       lifts_data(list(
         selected_item = selected_item,
