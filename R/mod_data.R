@@ -62,10 +62,9 @@ mod_data_ui <- function(id) {
       selectizeInput(ns("category"), "Select Category:", choices = NULL),
       selectInput(ns("equipped2"), "Raw or equipped lifter?", choices = c("Raw", "Equipped")),
 
-      br(),
-      br(),
+      br(), br(),
 
-      # Now wrap the training blocks in the same conditional panel
+      # Training blocks
       lapply(1:5, function(i) {
         card(
           full_screen = FALSE,
@@ -98,11 +97,20 @@ mod_data_ui <- function(id) {
             )
           )
         )
-      }) # end lapply
-    ) # end conditionalPanel for manual
+      })
+    ), # end conditionalPanel for manual
+
+    br(),
+
+    # ---------------------- Calculate Button ----------------------
+    div(
+      style = "text-align: center;",
+      actionButton(ns("calculate"), "🚀 Rate My SBD!", class = "btn btn-primary btn-lg")
+    )
 
   ) # end fluidPage
 }
+
 
 
 
@@ -111,7 +119,7 @@ mod_data_ui <- function(id) {
 #' @noRd
 #'
 #'
-mod_data_server <- function(id,lifts_data,openpl,minima,all_lifter_names){
+mod_data_server <- function(id,lifts_data){
   moduleServer(id, function(input, output, session){
     ns <- session$ns
 
@@ -130,69 +138,97 @@ mod_data_server <- function(id,lifts_data,openpl,minima,all_lifter_names){
       paste("Selected Category:", input$category)
     })
 
-    updateSelectizeInput(session, "weight_class", choices = unique(minima$WeightClass),server = TRUE)
-    updateSelectizeInput(session, "category", choices = unique(minima$Category),server = TRUE)
+    updateSelectizeInput(session, "weight_class", choices = minima_weightclass,server = TRUE)
+    updateSelectizeInput(session, "category", choices = minima_category,server = TRUE)
 
-    observe({
 
+
+
+    observeEvent(input$calculate, {
       selected_item <- input$selected_item %||% "No Lifter Selected"
 
 
+      tested = if (selected_item == "No Lifter Selected") input$tested2 else input$tested
+      equipped = if (selected_item == "No Lifter Selected") input$equipped2 else input$equipped
+
+      data <- init_data()
+      openpl <- data$openpl %>%
+        filter(
+          Equipment == equipped,
+          Tested == tested
+        )
+
       df <- if (selected_item == "No Lifter Selected") {
-
         data.frame(
-            Comp = 1:5,
-            year = 1:5,
-            Date = Sys.Date() + 1:5,
-            MeetName = paste("SBD",1:5),
-            Best3SquatKg = sapply(1:5, function(i) input[[paste0("squat", i)]]),
-            Best3BenchKg = sapply(1:5, function(i) input[[paste0("bench", i)]]),
-            Best3DeadliftKg = sapply(1:5, function(i) input[[paste0("deadlift", i)]]),
-            BodyweightKg = sapply(1:5, function(i) input[[paste0("bodyweight", i)]]),
-            WeightClassKg = rep(input$weight_class, 5),
-            Category = rep(input$category, 5),
-            Sex = rep(input$gender, 5),
-            Age = rep(input$age, 5),
-            Equipment = rep(input$equipped2, 5),
-            Tested = rep(input$tested2, 5),
-            Dots = sapply(1:5, function(i) {
-              bodyweight <- input[[paste0("bodyweight", i)]]
-              total_lift <- sum(input[[paste0("squat", i)]], input[[paste0("bench", i)]], input[[paste0("deadlift", i)]])
-              is_female <- input$gender == "Female"
-              calculate_dots(bodyweight, total_lift, is_female)
-            }),
-
-            TotalKg = sapply(1:5, function(i) {
-              sum(input[[paste0("squat", i)]], input[[paste0("bench", i)]], input[[paste0("deadlift", i)]])
-            })
-
-
-            )
-
-
+          Comp = 1:5,
+          year = 1:5,
+          Date = Sys.Date() + 1:5,
+          MeetName = paste("SBD", 1:5),
+          Best3SquatKg = sapply(1:5, function(i) input[[paste0("squat", i)]]),
+          Best3BenchKg = sapply(1:5, function(i) input[[paste0("bench", i)]]),
+          Best3DeadliftKg = sapply(1:5, function(i) input[[paste0("deadlift", i)]]),
+          BodyweightKg = sapply(1:5, function(i) input[[paste0("bodyweight", i)]]),
+          WeightClassKg = rep(input$weight_class, 5),
+          Category = rep(input$category, 5),
+          Sex = rep(input$gender, 5),
+          Age = rep(input$age, 5),
+          Equipment = rep(input$equipped2, 5),
+          Tested = rep(input$tested2, 5),
+          Dots = sapply(1:5, function(i) {
+            bodyweight <- input[[paste0("bodyweight", i)]]
+            total_lift <- sum(input[[paste0("squat", i)]], input[[paste0("bench", i)]], input[[paste0("deadlift", i)]])
+            is_female <- input$gender == "Female"
+            calculate_dots(bodyweight, total_lift, is_female)
+          }),
+          TotalKg = sapply(1:5, function(i) {
+            sum(input[[paste0("squat", i)]], input[[paste0("bench", i)]], input[[paste0("deadlift", i)]])
+          }),
+        )
       } else {
-
-        openpl %>% filter(Name == selected_item)
-
-
+        if (nrow(openpl) > 0) {
+          openpl %>% filter(Name == selected_item)
+        } else {
+          NULL
+        }
       }
 
 
-      if (selected_item == "No Lifter Selected") {
-
-        # Return the reactive expression so it can be used by other modules
-        # safer to do the filtering elsewhere.
-        lifts_data(list(selected_item = selected_item,df = df,tested = input$tested2,equipped = input$equipped2))
+      lifter_age <- max(df$Age, na.rm = TRUE)
+      lifter_sex <- df$Sex[1]
+      lifter_weightclass <- names(which.max(table(df$WeightClassKg)))
 
 
-      }else{
+      percentages <- list(
+        Best3SquatKg =
+        calculate_pct(lifter_age, lifter_sex, lifter_weightclass, openpl, "Best3SquatKg", df$Best3SquatKg),
+        Best3BenchKg =
+        calculate_pct(lifter_age, lifter_sex, lifter_weightclass,  openpl, "Best3BenchKg", df$Best3BenchKg),
+        Best3DeadliftKg =
+        calculate_pct(lifter_age, lifter_sex, lifter_weightclass, openpl, "Best3DeadliftKg", df$Best3DeadliftKg),
 
-        # Return the reactive expression so it can be used by other modules
-        # safer to do the filtering elsewhere.
-        lifts_data(list(selected_item = selected_item,df = df,tested = input$tested,equipped = input$equipped))
+        Dots =
+        calculate_pct(lifter_age, lifter_sex, lifter_weightclass,  openpl, "Dots", df$Dots),
 
-      }
+        TotalKg =
+        calculate_pct(lifter_age, lifter_sex, lifter_weightclass, openpl, "TotalKg", df$TotalKg)
+      )
+
+      # Store processed data in a shared reactiveVal
+
+      lifts_data(list(
+        selected_item = selected_item,
+        df = df,
+        percentages = percentages,
+        tested = tested,
+        equipped = equipped
+      ))
+
+      rm(data)
+      rm(openpl)
+      gc()
+
     })
+
 
   })
 }

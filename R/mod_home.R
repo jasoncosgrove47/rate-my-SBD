@@ -55,14 +55,14 @@ mod_home_ui <- function(id) {
 }
 
 
-mod_home_server <- function(id, openpl,minima) {
+mod_home_server <- function(id) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
     output$box_entries <- renderUI({
       value_box(
         title = NULL,
-        value = format(nrow(openpl), big.mark = ","),
+        value = format(2500000, big.mark = ","),
         showcase = shiny::icon("medal"),
         theme = value_box_theme(bg = "#9C7DCC"),
         p("performances evaluated", class = "white-text")
@@ -72,7 +72,7 @@ mod_home_server <- function(id, openpl,minima) {
     output$box_lifters <- renderUI({
       value_box(
         title = NULL,
-        value = format(length(unique(openpl$Name)), big.mark = ","),
+        value = format(735330, big.mark = ","),
         showcase = shiny::icon("person", class = "white-icon"),
         theme = value_box_theme(bg = "#808080", fg = "white"),
         p("lifters evaluated", class = "white-text")
@@ -82,7 +82,7 @@ mod_home_server <- function(id, openpl,minima) {
     output$box_countries <- renderUI({
       value_box(
         title = NULL,
-        value = format(length(unique(openpl$Country)), big.mark = ","),
+        value = format(175, big.mark = ","),
         showcase = shiny::icon("flag", class = "white-icon"),
         theme = value_box_theme(bg = "#E9B000", fg = "white"),
         p("countries evaluated", class = "white-text")

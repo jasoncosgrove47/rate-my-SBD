@@ -47,26 +47,24 @@ mod_attempts_ui <- function(id) {
 #' metrics Server Functions
 #'
 #' @noRd
-mod_attempts_server <- function(id,lifts_data,openpl,minima){
+mod_attempts_server <- function(id,lifts_data){
   moduleServer(id, function(input, output, session){
     ns <- session$ns
 
 
-    data <- reactive({
-      #lifts_data()
+    data_filtered <- reactiveVal()
 
+    observeEvent(lifts_data(), {
+
+      req(lifts_data())  # ensures lifts_data() is not NULL
       data <- lifts_data()
 
+      req(data$df, data$equipped, data$tested)
       data$df <- data$df %>%
-        filter(
-          Equipment == data$equipped,
-          Tested == data$tested
-        )
-
-      data  # return the full list with filtered df
-
-
+        filter(Equipment == data$equipped, Tested == data$tested)
+      data_filtered(data)
     })
+
 
 
 
@@ -75,17 +73,13 @@ mod_attempts_server <- function(id,lifts_data,openpl,minima){
 
     output$success_plot <- renderPlot({
 
-      data_val <- data()
-
-      calculate_success_rate(data_val$df)
+      calculate_success_rate(data_filtered()$df)
 
     })
 
     output$attempts_plot <- renderPlot({
 
-      data_val <- data()
-
-      plot_Attempts(data_val$df)
+      plot_Attempts(data_filtered()$df)
 
     })
 
@@ -241,7 +235,7 @@ calculate_success_rate <- function(lifter){
     annotate("text", x = 50, y = 1, label = paste0(round(percentile, 2), "%"),
              color = "white", size = 10, fontface = "bold") +
     # Add contextual information
-    annotate("text", x = 50, y = 1.8, label = paste("You have successfully made", round(percentile, 2), "% \n of all lifts attempted. The average \n successrate across all lifters is 77% "),
+    annotate("text", x = 50, y = 1.8, label = paste("You have successfully made", round(percentile, 2), "% \n of all lifts attempted. The average \n success rate across all lifters is 77% "),
              color = "black", size = 4, fontface = "bold") +
     # Formatting
     theme_void() +

@@ -32,8 +32,10 @@ openpl <- openpl %>%
          Bench2Kg,Bench3Kg,Deadlift1Kg,Deadlift2Kg,Deadlift3Kg)
 
 
-openpl <- openpl %>% filter(Age >= 14, !(is.na(Age)), !is.na(Sex),!is.na(BodyweightKg),!is.na(Division))
-openpl <- openpl %>% filter(!is.na(Best3SquatKg) | !is.na(Best3BenchKg) | !is.na(Best3DeadliftKg))
+openpl <- openpl %>% filter(Age >= 14, !(is.na(Age)))
+
+#, !is.na(Sex),!is.na(BodyweightKg),!is.na(Division))
+#openpl <- openpl %>% filter(!is.na(Best3SquatKg) | !is.na(Best3BenchKg) | !is.na(Best3DeadliftKg))
 
 all_lifter_names <- c("No Lifter Selected", unique(openpl$Name))
 
