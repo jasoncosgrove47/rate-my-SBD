@@ -105,7 +105,7 @@ mod_compare_server <- function(id,lifts_data){
       if (is.finite(max_tot)) paste(max_tot, "Kg") else "No data"
     })
 
-    output$textOutput <- renderText({"The following plots shows where your lifting total stands compared to lifters of the same sex, weight class, and age range (±5 years). In addition we assess your DOTS score which is a way to compare all lifters to each other, controlling for differences in weight and sex. This allows you to see how you compare to others—whether you're above average, near the middle of the pack, or aiming for further improvement."})
+    output$textOutput <- renderText({"The following plots shows where your lifting total stands compared to lifters of the same sex and weight class. In addition we assess your DOTS score which is a way to compare all lifters to each other, controlling for differences in weight and sex. This allows you to see how you compare to others—whether you're above average, near the middle of the pack, or aiming for further improvement."})
 
 
 

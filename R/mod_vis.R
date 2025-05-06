@@ -97,7 +97,7 @@ mod_vis_server <- function(id,lifts_data){
 
 
 
-    output$textOutput <- renderText({"The following plots shows where your performance stands compared to lifters of the same sex, weight class, and age range (±5 years). This allows you to see how you compare to others—whether you're above average, near the middle of the pack, or aiming for further improvement."})
+    output$textOutput <- renderText({"The following plots shows where your performance stands compared to lifters of the same sex and weight class. This allows you to see how you compare to others—whether you're above average, near the middle of the pack, or aiming for further improvement."})
 
 
     # Best lift outputs

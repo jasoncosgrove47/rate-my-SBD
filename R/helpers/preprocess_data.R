@@ -4,6 +4,9 @@
 #########################################################
 
 
+library(DBI)
+library(RSQLite)
+
 openpl <- read_csv("data/openpowerlifting-2025-02-22-48890240.csv")
 minima <- read_csv("data/minima.csv") %>%
   rename(WeightClass = `Catég.`)
@@ -31,13 +34,34 @@ openpl <- openpl %>%
          Squat1Kg,Squat2Kg,Squat3Kg, Bench1Kg,Country,Date,
          Bench2Kg,Bench3Kg,Deadlift1Kg,Deadlift2Kg,Deadlift3Kg)
 
+#if we dont know the age we set to the median lifter age of 27
+openpl <- openpl %>%
+  #mutate(Age = ifelse(is.na(Age), 27, Age)) %>%
+  filter(Age >= 14)
 
-openpl <- openpl %>% filter(Age >= 14, !(is.na(Age)))
 
-#, !is.na(Sex),!is.na(BodyweightKg),!is.na(Division))
-#openpl <- openpl %>% filter(!is.na(Best3SquatKg) | !is.na(Best3BenchKg) | !is.na(Best3DeadliftKg))
+
+openpl <- openpl %>%
+  filter(Best3BenchKg > 0,
+         Best3SquatKg > 0,
+         Best3DeadliftKg > 0,
+         BodyweightKg > 0,
+         WeightClassKg > 0,
+         Dots > 0,
+         TotalKg > 0)
+
+openpl <- openpl %>%
+  filter(year > 2000)
+
 
 all_lifter_names <- c("No Lifter Selected", unique(openpl$Name))
+
+
+con <- dbConnect(RSQLite::SQLite(), "data/openpl.sqlite")
+
+dbWriteTable(con, "openpl",  openpl,overwrite = TRUE)
+
+dbDisconnect(con)
 
 
 saveRDS(minima, "data/minima.rds")

@@ -4,17 +4,11 @@
 
 library(ggplot2)
 
-calculate_pct <- function(age,sex,weightclass,openpl,column_name,best_result) {
-
-  age_range <- 5
+calculate_pct <- function(openpl,column_name,best_result) {
 
 
-  df <- openpl %>%
-    filter(year > 2010) %>%
-    filter(age >= (age - age_range) & age <= (age + age_range)) %>%
-    filter(WeightClassKg == weightclass) %>%
-    filter(Sex == sex)
 
+  df <- openpl
 
 
   # Don't allow negative values
@@ -34,6 +28,23 @@ calculate_pct <- function(age,sex,weightclass,openpl,column_name,best_result) {
 }
 
 
+get_ipf_age_class <- function(age) {
+  sapply(age, function(a) {
+    if (is.na(a)) {
+      return(NA)
+    } else if (a >= 14 && a <= 18) {
+      return("subjunior")  # eligible for both, but prioritize open unless specifically sub-junior
+    } else if (a >= 19 && a <= 23) {
+      return("junior")
+    } else if (a >= 40) {
+      return("masters")
+    } else if (a > 23 && a < 40) {
+      return("open")
+    } else {
+      return(NA)  # under 14 or invalid
+    }
+  })
+}
 
 create_progress_bar <- function(percentages, column_name) {
 

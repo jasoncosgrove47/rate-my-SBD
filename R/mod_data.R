@@ -7,11 +7,17 @@
 #' @noRd
 #'
 #' @importFrom shiny NS tagList
+#' @import RSQLite
+#' @import DBI
 
 mod_data_ui <- function(id) {
   ns <- NS(id)
 
   fluidPage(
+
+    #add_busy_spinner(spin = "fading-circle",position = "full-page"),
+
+
 
     # Stylized instruction block
     div(
@@ -47,7 +53,12 @@ mod_data_ui <- function(id) {
       ),
       textOutput(ns("selected_item_text")),
       selectInput(ns("tested"), "Compete in a tested federation?", choices = c("Yes", "No")),
-      selectInput(ns("equipped"), "Raw or equipped lifter?", choices = c("Raw", "Equipped"))
+      selectInput(ns("equipped"), "Raw or equipped lifter?", choices = c("Raw", "Equipped")),
+      sliderInput(ns("ageSlider"), "Select Age Range To Compare Against:",
+                  min = 14,
+                  max = 100,
+                  value = c(18, 60)
+      )
     ),
 
     # ---------------------- Option 2 ----------------------
@@ -61,6 +72,12 @@ mod_data_ui <- function(id) {
       selectizeInput(ns("weight_class"), "Select Weight Class:", choices = NULL),
       selectizeInput(ns("category"), "Select Category:", choices = NULL),
       selectInput(ns("equipped2"), "Raw or equipped lifter?", choices = c("Raw", "Equipped")),
+
+      sliderInput(ns("ageSlider2"), "Select Age Range To Compare Against:",
+                  min = 14,
+                  max = 100,
+                  value = c(18, 60)
+      ),
 
       br(), br(),
 
@@ -143,21 +160,20 @@ mod_data_server <- function(id,lifts_data){
 
 
 
+   # shinybusy::show_modal_spinner(text = "Calculating... hang tight!")
+
+
 
     observeEvent(input$calculate, {
+
+      show_modal_spinner(text = 'Please wait... calculating your strength level') # show the modal window
+      con <- dbConnect(RSQLite::SQLite(), "data/openpl.sqlite")
+
       selected_item <- input$selected_item %||% "No Lifter Selected"
 
 
       tested = if (selected_item == "No Lifter Selected") input$tested2 else input$tested
       equipped = if (selected_item == "No Lifter Selected") input$equipped2 else input$equipped
-
-      data <- init_data()
-      openpl <- data$openpl %>%
-        filter(
-          Equipment == equipped,
-          Tested == tested
-        )
-
 
 
       df <- if (selected_item == "No Lifter Selected") {
@@ -189,33 +205,22 @@ mod_data_server <- function(id,lifts_data){
             sum(input[[paste0("squat", i)]], input[[paste0("bench", i)]], input[[paste0("deadlift", i)]])
           })
 
-          # Dots = sapply(1:5, function(i) {
-          #   bodyweight <- input[[paste0("bodyweight", i)]]
-          #   squat <- input[[paste0("squat", i)]]
-          #   bench <- input[[paste0("bench", i)]]
-          #   deadlift <- input[[paste0("deadlift", i)]]
-          #   total_lift <- squat + bench + deadlift
-          #   is_female <- input$gender == "Female"
-          #   calculate_dots(bodyweight, total_lift, is_female)
-          # }),
-          #
-          # TotalKg = sapply(1:5, function(i) {
-          #   squat <- input[[paste0("squat", i)]]
-          #   bench <- input[[paste0("bench", i)]]
-          #   deadlift <- input[[paste0("deadlift", i)]]
-          #   squat + bench + deadlift
-          # })
-
-
-
         )
       } else {
-        if (nrow(openpl) > 0) {
-          openpl %>% filter(Name == selected_item)
-        } else {
-          NULL
-        }
+
+          query <- "SELECT * FROM openpl WHERE Name = ? AND Equipment = ? AND Tested = ?"
+          dbGetQuery(con, query, params = list(selected_item,equipped,tested))
+
       }
+
+
+
+
+      year <- 2000
+
+      age_min = if (selected_item == "No Lifter Selected") input$ageSlider2[1] else input$ageSlider[1]
+
+      age_max = if (selected_item == "No Lifter Selected") input$ageSlider2[2] else input$ageSlider[2]
 
 
       lifter_age <- max(df$Age, na.rm = TRUE)
@@ -223,19 +228,37 @@ mod_data_server <- function(id,lifts_data){
       lifter_weightclass <- names(which.max(table(df$WeightClassKg)))
 
 
+
+
+
+      query <- "
+      SELECT Age, Best3SquatKg, Best3BenchKg, Best3DeadliftKg, Dots, TotalKg FROM openpl
+      WHERE year > ?
+      AND Age BETWEEN ? AND ?
+      AND WeightClassKg = ?
+      AND Sex = ?
+      AND Equipment = ?
+      AND Tested = ?"
+
+      openpl <- dbGetQuery(con, query, params = list(year, age_min,age_max,
+                                                     lifter_weightclass, lifter_sex,
+                                                     equipped, tested))
+
+
+
       percentages <- list(
         Best3SquatKg =
-        calculate_pct(lifter_age, lifter_sex, lifter_weightclass, openpl, "Best3SquatKg", max(df$Best3SquatKg,na.rm = TRUE)),
+        calculate_pct( openpl, "Best3SquatKg", max(df$Best3SquatKg,na.rm = TRUE)),
         Best3BenchKg =
-        calculate_pct(lifter_age, lifter_sex, lifter_weightclass,  openpl, "Best3BenchKg", max(df$Best3BenchKg,na.rm = TRUE)),
+        calculate_pct( openpl, "Best3BenchKg", max(df$Best3BenchKg,na.rm = TRUE)),
         Best3DeadliftKg =
-        calculate_pct(lifter_age, lifter_sex, lifter_weightclass, openpl, "Best3DeadliftKg", max(df$Best3DeadliftKg,na.rm = TRUE)),
+        calculate_pct( openpl, "Best3DeadliftKg", max(df$Best3DeadliftKg,na.rm = TRUE)),
 
         Dots =
-        calculate_pct(lifter_age, lifter_sex, lifter_weightclass,  openpl, "Dots", max(df$Dots,na.rm = TRUE)),
+        calculate_pct( openpl, "Dots", max(df$Dots,na.rm = TRUE)),
 
         TotalKg =
-        calculate_pct(lifter_age, lifter_sex, lifter_weightclass, openpl, "TotalKg", max(df$TotalKg,na.rm = TRUE))
+        calculate_pct(openpl, "TotalKg", max(df$TotalKg,na.rm = TRUE))
       )
 
       # Store processed data in a shared reactiveVal
@@ -249,11 +272,15 @@ mod_data_server <- function(id,lifts_data){
         equipped = equipped
       ))
 
-      rm(data)
+
       rm(openpl)
+      dbDisconnect(con)
       gc()
 
+      remove_modal_spinner() # remove it when done
+
     })
+
 
 
   })

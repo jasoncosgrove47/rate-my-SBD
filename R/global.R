@@ -13,7 +13,9 @@ library(shiny)
 library(dplyr)
 library(ggplot2)
 library(plotly)
-
+library(RSQLite)
+library(DBI)
+library(shinybusy)
 
 library(bslib)
 library(readr)

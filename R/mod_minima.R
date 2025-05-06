@@ -149,8 +149,8 @@ mod_minima_server <- function(id,lifts_data){
 
       # Define levels and styles
       levels <- c("R3", "R2", "R1", "N2", "N1", "Europe", "Monde")
-      level_labels <- c("Regional 3", "Regional 2", "Regional 1", "National 2", "National 1", "European", "International")
-      level_colors <- c("#333333", "#444444", "#555555", "#666666", "#888888", "#ff7f0e", "#ff4500")
+      level_labels <- c("Regional 3", "Regional 2", "Regional 1", "National 2", "National 1", "International", "International")
+      level_colors <- c("#333333", "#444444", "#555555", "#666666", "#888888", "#ff7f0e", "#ff7f0e")
 
       monde_value <- filtered_minima$Monde
       progress <- (value / monde_value) * 100
