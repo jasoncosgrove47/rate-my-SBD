@@ -52,12 +52,13 @@ mod_data_ui <- function(id) {
         options = list(maxOptions = 50)
       ),
       textOutput(ns("selected_item_text")),
-      selectInput(ns("tested"), "Compete in a tested federation?", choices = c("Yes", "No")),
-      selectInput(ns("equipped"), "Raw or equipped lifter?", choices = c("Raw", "Equipped")),
+      br(),
+      selectInput(ns("tested"), "Compete in a tested federation? (select 'All' to include tested and untested)", choices = c("All","Yes", "No")),
+      selectInput(ns("equipped"), "Filter by equipment type? (select 'All' to include all categories)", choices = c("All","Raw", "Equipped")),
       sliderInput(ns("ageSlider"), "Select Age Range To Compare Against:",
                   min = 14,
                   max = 100,
-                  value = c(18, 60)
+                  value = c(18, 40)
       )
     ),
 
@@ -68,10 +69,10 @@ mod_data_ui <- function(id) {
       tags$p("Only use this section if you're not listed on OpenPowerlifting."),
       selectInput(ns("gender"), "Select Gender:", choices = c("Male", "Female")),
       numericInput(ns("age"), "Enter Age:", value = 25, min = 1, max = 100),
-      selectInput(ns("tested2"), "Compete in a tested federation?", choices = c("Yes", "No")),
+      selectInput(ns("tested2"), "Compete in a tested federation? (select 'All' to include tested and untested)", choices = c("All","Yes", "No")),
       selectizeInput(ns("weight_class"), "Select Weight Class:", choices = NULL),
       selectizeInput(ns("category"), "Select Category:", choices = NULL),
-      selectInput(ns("equipped2"), "Raw or equipped lifter?", choices = c("Raw", "Equipped")),
+      selectInput(ns("equipped2"), "Raw or equipped lifter? (select 'All' to include all categories)", choices = c("All","Raw", "Equipped")),
 
       sliderInput(ns("ageSlider2"), "Select Age Range To Compare Against:",
                   min = 14,
@@ -167,7 +168,8 @@ mod_data_server <- function(id,lifts_data){
     observeEvent(input$calculate, {
 
       show_modal_spinner(text = 'Please wait... calculating your strength level') # show the modal window
-      con <- dbConnect(RSQLite::SQLite(), "data/openpl.sqlite")
+      con <- dbConnect(RSQLite::SQLite(), "data/openpl_filtered.sqlite")
+      con2 <- dbConnect(RSQLite::SQLite(), "data/openpl.sqlite")
 
       selected_item <- input$selected_item %||% "No Lifter Selected"
 
@@ -208,8 +210,16 @@ mod_data_server <- function(id,lifts_data){
         )
       } else {
 
-          query <- "SELECT * FROM openpl WHERE Name = ? AND Equipment = ? AND Tested = ?"
-          dbGetQuery(con, query, params = list(selected_item,equipped,tested))
+
+
+          query <- "SELECT * FROM openpl
+                    WHERE Name = ?
+                    AND (? = 'All' OR Equipment = ?)
+                    AND (? = 'All' OR Tested = ?)"
+          dbGetQuery(con2, query, params = list(selected_item,equipped,equipped,
+                                               tested,tested))
+
+
 
       }
 
@@ -237,12 +247,13 @@ mod_data_server <- function(id,lifts_data){
       AND Age BETWEEN ? AND ?
       AND WeightClassKg = ?
       AND Sex = ?
-      AND Equipment = ?
-      AND Tested = ?"
+      AND (? = 'All' OR Equipment = ?)
+      AND (? = 'All' OR Tested = ?)"
 
       openpl <- dbGetQuery(con, query, params = list(year, age_min,age_max,
                                                      lifter_weightclass, lifter_sex,
-                                                     equipped, tested))
+                                                     equipped,equipped,
+                                                     tested,tested))
 
 
 
@@ -275,6 +286,7 @@ mod_data_server <- function(id,lifts_data){
 
       rm(openpl)
       dbDisconnect(con)
+      dbDisconnect(con2)
       gc()
 
       remove_modal_spinner() # remove it when done

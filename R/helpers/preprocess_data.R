@@ -34,11 +34,9 @@ openpl <- openpl %>%
          Squat1Kg,Squat2Kg,Squat3Kg, Bench1Kg,Country,Date,
          Bench2Kg,Bench3Kg,Deadlift1Kg,Deadlift2Kg,Deadlift3Kg)
 
-#if we dont know the age we set to the median lifter age of 27
-openpl <- openpl %>%
-  #mutate(Age = ifelse(is.na(Age), 27, Age)) %>%
-  filter(Age >= 14)
-
+# get rid of NA ages
+  openpl <- openpl %>%
+   filter(Age >= 14)
 
 
 openpl <- openpl %>%
@@ -46,7 +44,6 @@ openpl <- openpl %>%
          Best3SquatKg > 0,
          Best3DeadliftKg > 0,
          BodyweightKg > 0,
-         WeightClassKg > 0,
          Dots > 0,
          TotalKg > 0)
 
@@ -57,7 +54,7 @@ openpl <- openpl %>%
 all_lifter_names <- c("No Lifter Selected", unique(openpl$Name))
 
 
-con <- dbConnect(RSQLite::SQLite(), "data/openpl.sqlite")
+con <- dbConnect(RSQLite::SQLite(), "data/openpl_filtered.sqlite")
 
 dbWriteTable(con, "openpl",  openpl,overwrite = TRUE)
 
