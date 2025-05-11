@@ -36,6 +36,18 @@ minima_category <- c("subjr", "jr"   , "open" , "M1" ,"M2", "M3", "M4")
 minima_weightclass <- c( "53","59","66","74","83","93","105","120","120 +",
                          "43","47","52","57","63","69","76","84","84 +" )
 
+# Men's weight classes
+men_weightclass <- c("53", "59", "66", "74", "83", "93", "105", "120", "120+")
+
+# Women's weight classes
+women_weightclass <- c("43", "47", "52", "57", "63", "69", "76", "84", "84+")
+
+# Combine them into a named list
+weightclasses <- list(
+  Men = men_weightclass,
+  Women = women_weightclass
+)
+
 minima_sex <- c("M","F")
 
 all_lifter_names = readRDS("data/all_lifter_names.rds")

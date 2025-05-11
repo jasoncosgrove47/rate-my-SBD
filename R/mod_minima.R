@@ -64,15 +64,14 @@ mod_minima_server <- function(id,lifts_data){
       req(lifts_data())  # ensures lifts_data() is not NULL
       data <- lifts_data()
 
-      # req(data$df, data$equipped, data$tested)
-      # data$df <- data$df %>%
-      #   filter(Equipment == data$equipped, Tested == data$tested)
       data_filtered(data)
     })
 
 
 
-    updateSelectizeInput(session, "weight_class", choices = minima_weightclass,server = TRUE)
+
+
+    updateSelectizeInput(session, "weight_class", choices = weightclasses,server = TRUE)
     updateSelectizeInput(session, "category", choices = minima_category,server = TRUE)
     updateSelectizeInput(session, "sex", choices = minima_sex,server = TRUE)
 

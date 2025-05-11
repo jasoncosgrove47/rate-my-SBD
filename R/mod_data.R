@@ -156,7 +156,7 @@ mod_data_server <- function(id,lifts_data){
       paste("Selected Category:", input$category)
     })
 
-    updateSelectizeInput(session, "weight_class", choices = minima_weightclass,server = TRUE)
+    updateSelectizeInput(session, "weight_class", choices = weightclasses,server = TRUE)
     updateSelectizeInput(session, "category", choices = minima_category,server = TRUE)
 
 

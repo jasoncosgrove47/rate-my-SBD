@@ -86,9 +86,6 @@ mod_compare_server <- function(id,lifts_data){
       req(lifts_data())  # ensures lifts_data() is not NULL
       data <- lifts_data()
 
-      # req(data$df, data$equipped, data$tested)
-      # data$df <- data$df %>%
-      #   filter(Equipment == data$equipped, Tested == data$tested)
       data_filtered(data)
     })
 
